@@ -1,0 +1,229 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,700;1,200;1,300&family=Roboto:wght@300;400;500;700&display=swap');
+*{
+    margin: 0;
+    padding:0;
+    box-sizing: border-box;
+}
+:root{
+    --head-color:#f8f1e5fe;
+    --body-color:#c9c7c7e2;
+    --web-body:white;
+    --text-color:#3e3e37;
+    --link-color:#4b4c4d;
+    --link-hover-color:#262626;
+}
+body{
+    background-color:var(--web-body);
+    display: block;
+    margin: auto;
+
+    
+}
+.head{
+    display:flex;
+    margin-bottom: 0;
+    margin-top:20px;
+    margin-left: 12%;
+    margin-right: 0%;
+    flex-wrap: wrap;
+
+    /* margin-left: 10%;
+    margin-right: 5%;
+    margin-top: 5%; */
+    max-width: 1000px;
+    height:10vh;
+    background-color:var(--head-color);
+    opacity: 0.8;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+#c1{
+    height: 25px;
+    width: 25px;
+    border-radius: 50px;
+    background-color:#121456 ;
+    /* padding-left: 10px; */
+    margin-left: 15px;
+   
+}
+.buttons{
+    display: flex;
+}
+#c2{
+    height: 25px;
+    width: 25px;
+    border-radius: 50px;
+    background-color: #161613;
+    /* padding-left: 10px; */
+    margin-left: 15px;
+}
+#c3{
+    height: 25px;
+    width: 25px;
+    border-radius: 50px;
+    background-color:white;
+    /* padding-left: 10px; */
+    margin-left: 15px;
+}
+#c1,#c2,#c3{
+    cursor:pointer;
+    transition: 0.3s ease-out;
+}
+
+#c1:hover,#c2:hover,#c3:hover{
+    transform: scale(1.1);
+    transition: 0.3s ease-in-out;
+}
+.body-box{
+    display:flex;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+    margin-left: 12%;
+    margin-right: 0%;
+    max-width: 1000px;
+    height:90vh;
+    background-color:var(--body-color);
+    border-bottom-right-radius: 5px;
+    align-items: center;
+    border-bottom: 5px;
+}
+
+.body-box .right{
+    flex:1;
+    display:flex;
+    flex-direction: column;
+    align-items: center;
+}
+    
+.body-box .text{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+   margin-top: 0px;
+   margin-right: 80px;
+   
+   padding-left:0;
+    width:80%;
+    border: 3px solid var(--text-color);
+    height: 40vh;
+    border-radius:9px;
+}
+.text{
+    font-family: 'Roboto',sans-serif;
+    font-size: 25px;
+    text-align: center;
+    
+}
+.text h4{
+    color:var(--text-color);
+    padding-top: 15px;
+    padding-bottom: 0;
+    font-weight: 300;
+    letter-spacing: 0.1em;
+}
+.text h3{
+    color:var(--text-color);
+    font-weight: 700;
+    padding-top: 0;
+
+}
+.text p{
+    color:var(--text-color);
+    padding-top: 0;
+    font-weight: 400;
+    font-size: 18px;
+}
+.links{
+    display:flex;
+    align-items: center;
+    text-align: center;
+    margin-top: 0;
+    padding-top: 0;
+    margin-right: 80px;
+    height: 20vh;
+}
+.links a{
+    
+    margin-top: 15px;
+    padding-top: 25px;
+    text-align: center;
+    padding-bottom: 25px;
+    color:var(--link-color);
+}
+.links .socials{
+    padding: 15px;
+    
+}
+.links .socials .fab{
+    font-size: 25px;
+}
+.body-box .left{
+    flex:1;
+    align-items: center;
+    text-align: center;
+    
+}
+.left img{
+    cursor: pointer;
+    width:350px;
+    height:465px;
+    border-radius: 15px;
+    box-shadow:0px 5px 15px #262626;
+}
+.left img:hover{
+    translate:1.1;
+}
+.heading{
+    font-family:'Poppins',sans-serif;
+}
+.heading h2{
+    color:var(--text-color);
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 2em;
+    letter-spacing: 0.1em;
+}
+.heading h6{
+    color:var(--text-color);
+    font-size:1.6em;
+    font-weight:400;
+    padding-right: 10px;
+    margin-right: 15px;
+    cursor: pointer;
+    
+    transition: 0.5s ease;
+   
+}
+.heading h6:hover{
+    color:#31d831;
+    letter-spacing: 0.03em;
+    transition: 0.5s ease;
+}
+
+button{
+    margin-top: 25px;
+    background-color: #4b4c4d;
+    border-radius: 4px;
+    outline: none;
+    font-size:14px;
+    color:white;
+    cursor: pointer;
+}
+button:hover{
+    transform: scalex(1.01);
+    transform: scaley(1.01);
+    transition: 0.5s ease;
+  
+
+}
+.socials i:hover{
+    color:var(--link-hover-color);
+    transform: scale(1.1);
+    transition: 0.5s ease;
+}
+
+
