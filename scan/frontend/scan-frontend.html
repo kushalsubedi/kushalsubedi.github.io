@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <style>
+      * {
+        font-family: Arial, Helvetica, sans-serif;
+      }
+      h1 {
+        text-align: center;
+      }
+      .group-header th {
+        font-size: 200%;
+      }
+      .sub-header th {
+        font-size: 150%;
+      }
+      table, th, td {
+        border: 1px solid black;
+        border-collapse: collapse;
+        white-space: nowrap;
+        padding: .3em;
+      }
+      table {
+        margin: 0 auto;
+      }
+      .severity {
+        text-align: center;
+        font-weight: bold;
+        color: #fafafa;
+      }
+      .severity-LOW .severity { background-color: #5fbb31; }
+      .severity-MEDIUM .severity { background-color: #e9c600; }
+      .severity-HIGH .severity { background-color: #ff8800; }
+      .severity-CRITICAL .severity { background-color: #e40000; }
+      .severity-UNKNOWN .severity { background-color: #747474; }
+      .severity-LOW { background-color: #5fbb3160; }
+      .severity-MEDIUM { background-color: #e9c60060; }
+      .severity-HIGH { background-color: #ff880060; }
+      .severity-CRITICAL { background-color: #e4000060; }
+      .severity-UNKNOWN { background-color: #74747460; }
+      table tr td:first-of-type {
+        font-weight: bold;
+      }
+      .links a,
+      .links[data-more-links=on] a {
+        display: block;
+      }
+      .links[data-more-links=off] a:nth-of-type(1n+5) {
+        display: none;
+      }
+      a.toggle-more-links { cursor: pointer; }
+    </style>
+    <title>kushalsubedi/frontend-app:v1.8.11 (alpine 3.21.3) - Trivy Report - 2025-07-07 12:15:38.78903491 +0000 UTC m=+6.264849650 </title>
+    <script>
+      window.onload = function() {
+        document.querySelectorAll('td.links').forEach(function(linkCell) {
+          var links = [].concat.apply([], linkCell.querySelectorAll('a'));
+          [].sort.apply(links, function(a, b) {
+            return a.href > b.href ? 1 : -1;
+          });
+          links.forEach(function(link, idx) {
+            if (links.length > 3 && 3 === idx) {
+              var toggleLink = document.createElement('a');
+              toggleLink.innerText = "Toggle more links";
+              toggleLink.href = "#toggleMore";
+              toggleLink.setAttribute("class", "toggle-more-links");
+              linkCell.appendChild(toggleLink);
+            }
+            linkCell.appendChild(link);
+          });
+        });
+        document.querySelectorAll('a.toggle-more-links').forEach(function(toggleLink) {
+          toggleLink.onclick = function() {
+            var expanded = toggleLink.parentElement.getAttribute("data-more-links");
+            toggleLink.parentElement.setAttribute("data-more-links", "on" === expanded ? "off" : "on");
+            return false;
+          };
+        });
+      };
+    </script>
+  </head>
+  <body>
+    <h1>kushalsubedi/frontend-app:v1.8.11 (alpine 3.21.3) - Trivy Report - 2025-07-07 12:15:38.789077299 +0000 UTC m=+6.264892019</h1>
+    <table>
+      <tr class="group-header"><th colspan="6">alpine</th></tr>
+      <tr class="sub-header">
+        <th>Package</th>
+        <th>Vulnerability ID</th>
+        <th>Severity</th>
+        <th>Installed Version</th>
+        <th>Fixed Version</th>
+        <th>Links</th>
+      </tr>
+      <tr class="severity-HIGH">
+        <td class="pkg-name">libxml2</td>
+        <td>CVE-2025-32414</td>
+        <td class="severity">HIGH</td>
+        <td class="pkg-version">2.13.4-r5</td>
+        <td>2.13.4-r6</td>
+        <td class="links" data-more-links="off">
+          <a href="https://access.redhat.com/errata/RHSA-2025:8958">https://access.redhat.com/errata/RHSA-2025:8958</a>
+          <a href="https://access.redhat.com/security/cve/CVE-2025-32414">https://access.redhat.com/security/cve/CVE-2025-32414</a>
+          <a href="https://bugzilla.redhat.com/2358121">https://bugzilla.redhat.com/2358121</a>
+          <a href="https://errata.almalinux.org/8/ALSA-2025-8958.html">https://errata.almalinux.org/8/ALSA-2025-8958.html</a>
+          <a href="https://gitlab.gnome.org/GNOME/libxml2/-/issues/889">https://gitlab.gnome.org/GNOME/libxml2/-/issues/889</a>
+          <a href="https://linux.oracle.com/cve/CVE-2025-32414.html">https://linux.oracle.com/cve/CVE-2025-32414.html</a>
+          <a href="https://linux.oracle.com/errata/ELSA-2025-8958.html">https://linux.oracle.com/errata/ELSA-2025-8958.html</a>
+          <a href="https://nvd.nist.gov/vuln/detail/CVE-2025-32414">https://nvd.nist.gov/vuln/detail/CVE-2025-32414</a>
+          <a href="https://ubuntu.com/security/notices/USN-7467-1">https://ubuntu.com/security/notices/USN-7467-1</a>
+          <a href="https://ubuntu.com/security/notices/USN-7467-2">https://ubuntu.com/security/notices/USN-7467-2</a>
+          <a href="https://www.cve.org/CVERecord?id=CVE-2025-32414">https://www.cve.org/CVERecord?id=CVE-2025-32414</a>
+        </td>
+      </tr>
+      <tr class="severity-HIGH">
+        <td class="pkg-name">libxml2</td>
+        <td>CVE-2025-32415</td>
+        <td class="severity">HIGH</td>
+        <td class="pkg-version">2.13.4-r5</td>
+        <td>2.13.4-r6</td>
+        <td class="links" data-more-links="off">
+          <a href="https://access.redhat.com/security/cve/CVE-2025-32415">https://access.redhat.com/security/cve/CVE-2025-32415</a>
+          <a href="https://gitlab.gnome.org/GNOME/libxml2/-/issues/890">https://gitlab.gnome.org/GNOME/libxml2/-/issues/890</a>
+          <a href="https://nvd.nist.gov/vuln/detail/CVE-2025-32415">https://nvd.nist.gov/vuln/detail/CVE-2025-32415</a>
+          <a href="https://ubuntu.com/security/notices/USN-7467-1">https://ubuntu.com/security/notices/USN-7467-1</a>
+          <a href="https://ubuntu.com/security/notices/USN-7467-2">https://ubuntu.com/security/notices/USN-7467-2</a>
+          <a href="https://www.cve.org/CVERecord?id=CVE-2025-32415">https://www.cve.org/CVERecord?id=CVE-2025-32415</a>
+        </td>
+      </tr>
+      <tr><th colspan="6">No Misconfigurations found</th></tr>
+    </table>
+  </body>
+</html>
