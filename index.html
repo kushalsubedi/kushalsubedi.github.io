@@ -3,94 +3,128 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kushal Subedi | Portfolio</title>
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+  <title>Kushal Subedi - DevOps Resume</title>
+  <style>
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: #fdfdfd;
+      margin: 0;
+      padding: 20px;
+      color: #222;
+      line-height: 1.5;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    header h1 {
+      font-size: 2.2rem;
+      margin: 0;
+    }
+    header h2 {
+      font-size: 1.2rem;
+      font-weight: normal;
+      color: #555;
+      margin: 5px 0 0;
+    }
+    header .highlight {
+      color: #0d6efd;
+      font-weight: bold;
+    }
+    section {
+      margin-bottom: 20px;
+    }
+    h3 {
+      border-bottom: 2px solid #0d6efd;
+      padding-bottom: 5px;
+      margin-bottom: 10px;
+      font-size: 1.2rem;
+      text-transform: uppercase;
+    }
+    ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+    li {
+      margin-bottom: 6px;
+    }
+    .job-title {
+      font-weight: bold;
+      color: #0d6efd;
+    }
+    footer {
+      text-align: center;
+      font-size: 0.9rem;
+      color: #555;
+      margin-top: 20px;
+    }
+    /* Toggle buttons */
+    .toggle-btn {
+      background: #0d6efd;
+      color: #fff;
+      border: none;
+      padding: 5px 10px;
+      margin-left: 10px;
+      cursor: pointer;
+      border-radius: 5px;
+      font-size: 0.8rem;
+    }
+  </style>
 </head>
 <body>
 
-  <!-- Header / Hero -->
-  <header id="hero">
-    <div class="container">
-      <div class="hero-content">
-        <img src="me.jpg" alt="Kushal Subedi" class="profile-pic">
-        <h1>Hello, I'm <span>Kushal Subedi</span></h1>
-        <p>Software Engineer | DevOps Enthusiast | Python Developer</p>
-        <a href="cv.pdf" class="btn" download>Download CV</a>
-        <div class="social-links">
-          <a href="https://www.linkedin.com/in/kushal-subedi-3a4a96223/" target="_blank"><i class="fab fa-linkedin"></i></a>
-          <a href="https://github.com/kushalsubedi" target="_blank"><i class="fab fa-github"></i></a>
-          <a href="https://www.instagram.com/kus_all__/" target="_blank"><i class="fab fa-instagram"></i></a>
-          <a href="https://www.facebook.com/kushal.subedi.9083" target="_blank"><i class="fab fa-facebook"></i></a>
-          <a href="https://twitter.com/" target="_blank"><i class="fab fa-twitter"></i></a>
-        </div>
-      </div>
-    </div>
+  <header>
+    <h1><span class="highlight">DevOps</span> Engineer - Kushal Subedi</h1>
+    <h2>Cloud & DevOps | Kubernetes | AWS | Python</h2>
   </header>
 
-  <!-- About -->
-  <section id="about" class="section">
-    <div class="container">
-      <h2>About Me</h2>
-      <p>
-        I’m a Software Engineer with experience building applications in Python and Django, 
-        and strong DevOps expertise in AWS, Kubernetes, and Terraform. 
-        I love creating scalable, secure cloud-native solutions while bridging software development 
-        and infrastructure automation.
-      </p>
-    </div>
+  <section id="leadership">
+    <h3>Leadership 
+      <button class="toggle-btn" onclick="toggleSection('leadership')">Toggle</button>
+    </h3>
+    <ul>
+      <li class="job-title">Executive Member, CSITAN Pokhara</li>
+      <li>Organized large-scale technical events and meetups, fostering community learning and collaboration.</li>
+      <li>Led student groups, bridging industry experts with learners through workshops and talks.</li>
+    </ul>
   </section>
 
-  <!-- Skills -->
-  <section id="skills" class="section">
-    <div class="container">
-      <h2>Skills</h2>
-      <div class="skills-grid">
-        <div class="skill-card"><i class="fab fa-aws"></i> AWS & Cloud</div>
-        <div class="skill-card"><i class="fas fa-cubes"></i> Kubernetes & Docker</div>
-        <div class="skill-card"><i class="fas fa-code"></i> Python & Django</div>
-        <div class="skill-card"><i class="fas fa-tools"></i> Terraform & CI/CD</div>
-        <div class="skill-card"><i class="fas fa-shield-alt"></i> Security & Monitoring</div>
-      </div>
-    </div>
+  <section id="mentorship">
+    <h3>Mentorship 
+      <button class="toggle-btn" onclick="toggleSection('mentorship')">Toggle</button>
+    </h3>
+    <ul>
+      <li class="job-title">Python & Web Development Mentor (2021–2025)</li>
+      <li>Mentored 100+ students in Python and web development, achieving strong career transition outcomes.</li>
+      <li>Delivered intensive workshops on <b>DevOps</b> and cloud computing, simplifying complex concepts for diverse audiences.</li>
+    </ul>
   </section>
 
-  <!-- Projects -->
-  <section id="projects" class="section">
-    <div class="container">
-      <h2>Projects</h2>
-      <div class="project-grid">
-        <div class="project-card">
-          <h3>AI-Powered Stock Prediction</h3>
-          <p>LSTM-based system deployed on AWS, serving predictions to 500+ daily users.</p>
-        </div>
-        <div class="project-card">
-          <h3>Cloud-Native E-commerce</h3>
-          <p>Full-stack platform using Django, React, and Docker with AWS deployment.</p>
-        </div>
-        <div class="project-card">
-          <h3>Secure CI/CD Pipelines</h3>
-          <p>Integrated security scanning with GitHub Actions and SonarQube.</p>
-        </div>
-      </div>
-    </div>
+  <section>
+    <h3>Technical Skills</h3>
+    <ul>
+      <li>Cloud: AWS, Kubernetes, Docker, Terraform</li>
+      <li>Programming: Python, Bash, Go</li>
+      <li>Monitoring: Grafana, Prometheus, Wazuh</li>
+      <li>CI/CD: GitHub Actions, Jenkins</li>
+    </ul>
   </section>
 
-  <!-- Contact -->
-  <section id="contact" class="section">
-    <div class="container">
-      <h2>Contact Me</h2>
-      <p><i class="fas fa-envelope"></i> kushalsubedi20@gmail.com</p>
-      <p><i class="fas fa-phone"></i> (+977) 9865212350</p>
-      <a href="scan.html" class="btn">Scan</a>
-    </div>
-  </section>
-
-  <!-- Footer -->
   <footer>
-    <p>&copy; 2025 Kushal Subedi. All Rights Reserved.</p>
+    Contact: kushal.subedi@example.com | GitHub: github.com/kushalsubedi
   </footer>
 
-  <script src="js/script.js"></script>
+  <script>
+    function toggleSection(id) {
+      const section = document.getElementById(id);
+      const list = section.querySelector("ul");
+      if (list.style.display === "none") {
+        list.style.display = "block";
+      } else {
+        list.style.display = "none";
+      }
+    }
+  </script>
+
 </body>
 </html>
