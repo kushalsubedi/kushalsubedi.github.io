@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wait... what? ❤️</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital,wght@0,400;1,600&display=swap" rel="stylesheet">
+    <title>System Error: Love Not Found 💔</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital,wght@0,400;1,600&family=Space+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
             --velvet: #1a050a;
             --rose-gold: #e5989b;
             --cream: #fff0f3;
             --primary: #ff4d6d;
+            --error: #ff0033;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -32,48 +33,65 @@
             z-index: -1;
         }
 
-        .container { text-align: center; z-index: 10; display: flex; flex-direction: column; align-items: center; width: 100%; }
-        
         .message-card {
             padding: 60px;
             background: rgba(255, 255, 255, 0.03);
             backdrop-filter: blur(25px);
             border-radius: 40px;
             border: 1px solid rgba(229, 152, 155, 0.2);
+            text-align: center;
             width: 90%;
             max-width: 500px;
+            z-index: 10;
         }
 
-        h1 { font-family: 'Cinzel', serif; color: var(--rose-gold); letter-spacing: 4px; margin-bottom: 20px; transition: 0.5s; }
-        p { color: var(--cream); margin-bottom: 30px; font-size: 1.1rem; opacity: 0.8; }
+        h1 { font-family: 'Cinzel', serif; color: var(--rose-gold); letter-spacing: 4px; margin-bottom: 20px; transition: 0.3s; }
+        #status { font-family: 'Space Mono', monospace; font-size: 0.8rem; color: var(--rose-gold); opacity: 0.6; margin-bottom: 30px; }
+
+        .btn-container {
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            position: relative;
+        }
 
         .btn {
-            padding: 15px 40px;
+            padding: 12px 35px;
             border-radius: 50px;
             font-family: 'Cinzel', serif;
-            font-size: 1rem;
+            font-size: 0.9rem;
             cursor: pointer;
-            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), background 0.3s, opacity 0.3s;
             border: none;
             letter-spacing: 2px;
-            position: absolute;
-            white-space: nowrap;
+            transition: transform 0.2s, opacity 0.3s;
         }
 
         #yesBtn {
             background: var(--primary);
             color: white;
             box-shadow: 0 0 20px rgba(255, 77, 109, 0.4);
-            left: 35%;
-            top: 70%;
         }
 
         #noBtn {
             background: transparent;
             border: 1px solid var(--rose-gold);
             color: var(--rose-gold);
-            left: 55%;
-            top: 70%;
+        }
+
+        /* Glitch Animation */
+        .glitch {
+            animation: glitch 0.2s infinite;
+            color: var(--error) !important;
+        }
+
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-3px, 3px); }
+            40% { transform: translate(-3px, -3px); }
+            60% { transform: translate(3px, 3px); }
+            80% { transform: translate(3px, -3px); }
+            100% { transform: translate(0); }
         }
 
         /* Butterflies */
@@ -88,14 +106,12 @@
 
     <div class="ambient-glow"></div>
 
-    <div class="container">
-        <div class="message-card">
-            <h1 id="headline">Will you be my Valentine?</h1>
-            <p id="status">Wait for it...</p>
-            <div style="height: 100px; position: relative; width: 100%;" id="arena">
-                <button id="yesBtn" class="btn">YES</button>
-                <button id="noBtn" class="btn">NO</button>
-            </div>
+    <div class="message-card">
+        <h1 id="headline">Will you be mine?</h1>
+        <p id="status">Initializing romantic protocols...</p>
+        <div class="btn-container">
+            <button id="yesBtn" class="btn">YES</button>
+            <button id="noBtn" class="btn">NO</button>
         </div>
     </div>
 
@@ -104,62 +120,65 @@
         const noBtn = document.getElementById('noBtn');
         const status = document.getElementById('status');
         const headline = document.getElementById('headline');
-        
-        let clickCount = 0;
-        let canEscape = true;
 
-        // Function to move button away
-        function escape(btn) {
-            if (!canEscape) return;
+        // NO Button Escape
+        const escape = (btn) => {
             const x = Math.random() * (window.innerWidth - 150);
             const y = Math.random() * (window.innerHeight - 100);
             btn.style.position = 'fixed';
             btn.style.left = x + 'px';
             btn.style.top = y + 'px';
-        }
+        };
 
-        // Logic for NO button (always runs)
         noBtn.addEventListener('mouseover', () => escape(noBtn));
 
-        // Logic for YES button
+        // YES Button Prank Logic
         yesBtn.addEventListener('click', () => {
-            clickCount++;
-            
-            if (clickCount === 1) {
-                // THE PRANK: Turn Yes into No
-                yesBtn.innerHTML = "NO";
-                yesBtn.style.background = "transparent";
-                yesBtn.style.border = "1px solid #e5989b";
-                yesBtn.style.color = "#e5989b";
-                status.innerHTML = "Wait, that's not right...";
-                escape(yesBtn);
-            } else if (clickCount >= 5) {
-                // THE REVEAL: After chasing it a bit
-                canEscape = false;
-                yesBtn.innerHTML = "YES! ❤️";
-                yesBtn.style.background = "var(--primary)";
-                yesBtn.style.color = "white";
-                yesBtn.style.position = "relative";
-                yesBtn.style.left = "0";
-                yesBtn.style.top = "0";
-                yesBtn.style.transform = "scale(1.5)";
-                noBtn.style.display = "none";
-                headline.innerHTML = "Yay! Best Choice Ever!";
-                status.innerHTML = "I knew you couldn't resist.";
-                spawnButterflies();
-            }
+            // Step 1: Turn into NO and Glitch
+            yesBtn.innerHTML = "NO";
+            yesBtn.classList.add('glitch');
+            headline.classList.add('glitch');
+            status.innerHTML = "CRITICAL ERROR: CONSENT_ARRAY_OVERFLOW";
+
+            // Step 2: Disappear after a short delay
+            setTimeout(() => {
+                yesBtn.style.transform = "scale(0)";
+                yesBtn.style.opacity = "0";
+                
+                setTimeout(() => {
+                    yesBtn.remove(); // GONE FOREVER
+                    status.innerHTML = "REPAIRING SYSTEM... PLEASE HOLD";
+                    
+                    // Step 3: The "Recovery"
+                    setTimeout(restoreLove, 3000);
+                }, 500);
+            }, 1000);
         });
 
-        // Make "Yes" (fake No) escape on hover after first click
-        yesBtn.addEventListener('mouseover', () => {
-            if (clickCount >= 1 && clickCount < 5) {
-                escape(yesBtn);
-                clickCount++; // Increment count on hover to speed up the game
-            }
-        });
+        function restoreLove() {
+            headline.classList.remove('glitch');
+            headline.innerHTML = "Fine, I'll make it easy.";
+            status.innerHTML = "Override complete. Hearts deploying.";
+            
+            // Create a giant, unmissable YES button
+            const giantYes = document.createElement('button');
+            giantYes.className = 'btn';
+            giantYes.innerHTML = "CLICK HERE TO BE MINE ❤️";
+            giantYes.style.cssText = "background: var(--primary); color: white; width: 300px; height: 80px; font-size: 1.2rem; position: relative; z-index: 100; cursor: pointer;";
+            
+            document.querySelector('.btn-container').innerHTML = '';
+            document.querySelector('.btn-container').appendChild(giantYes);
+
+            giantYes.onclick = () => {
+                headline.innerHTML = "Finally! Happy Valentine's!";
+                status.innerHTML = "System status: In Love.";
+                giantYes.style.display = 'none';
+                spawnButterflies();
+            };
+        }
 
         function spawnButterflies() {
-            for(let i=0; i<40; i++) {
+            for(let i=0; i<50; i++) {
                 setTimeout(() => {
                     const b = document.createElement('div');
                     b.className = 'butterfly';
@@ -173,18 +192,12 @@
                         if(pY > -50) requestAnimationFrame(m); else b.remove();
                     }
                     m();
-                }, i * 100);
+                }, i * 50);
             }
         }
 
-        // Initial Lock
-        yesBtn.style.opacity = "0.3";
-        yesBtn.style.pointerEvents = "none";
-        setTimeout(() => {
-            yesBtn.style.opacity = "1";
-            yesBtn.style.pointerEvents = "all";
-            status.innerHTML = "Try to click Yes...";
-        }, 3000);
+        // Initial Reveal
+        setTimeout(() => { status.innerHTML = "System Ready."; }, 2000);
     </script>
 </body>
 </html>
