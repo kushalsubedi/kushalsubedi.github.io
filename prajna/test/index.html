@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wait... what? ❤️</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital,wght@0,400;1,600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --velvet: #1a050a;
+            --rose-gold: #e5989b;
+            --cream: #fff0f3;
+            --primary: #ff4d6d;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--velvet);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .ambient-glow {
+            position: absolute;
+            width: 100vw; height: 100vh;
+            background: radial-gradient(circle at center, #3d0d1a 0%, #1a050a 100%);
+            z-index: -1;
+        }
+
+        .container { text-align: center; z-index: 10; display: flex; flex-direction: column; align-items: center; width: 100%; }
+        
+        .message-card {
+            padding: 60px;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(25px);
+            border-radius: 40px;
+            border: 1px solid rgba(229, 152, 155, 0.2);
+            width: 90%;
+            max-width: 500px;
+        }
+
+        h1 { font-family: 'Cinzel', serif; color: var(--rose-gold); letter-spacing: 4px; margin-bottom: 20px; transition: 0.5s; }
+        p { color: var(--cream); margin-bottom: 30px; font-size: 1.1rem; opacity: 0.8; }
+
+        .btn {
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-family: 'Cinzel', serif;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), background 0.3s, opacity 0.3s;
+            border: none;
+            letter-spacing: 2px;
+            position: absolute;
+            white-space: nowrap;
+        }
+
+        #yesBtn {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 0 20px rgba(255, 77, 109, 0.4);
+            left: 35%;
+            top: 70%;
+        }
+
+        #noBtn {
+            background: transparent;
+            border: 1px solid var(--rose-gold);
+            color: var(--rose-gold);
+            left: 55%;
+            top: 70%;
+        }
+
+        /* Butterflies */
+        .butterfly { position: absolute; pointer-events: none; transform-style: preserve-3d; z-index: 5; }
+        .wing { position: absolute; width: 12px; height: 18px; background: rgba(229, 152, 155, 0.5); border-radius: 50% 50% 0 50%; animation: flap 0.2s infinite alternate; }
+        .right { left: 12px; border-radius: 50% 50% 50% 0; transform-origin: left; }
+        .left { transform-origin: right; }
+        @keyframes flap { from { transform: rotateY(0deg); } to { transform: rotateY(80deg); } }
+    </style>
+</head>
+<body>
+
+    <div class="ambient-glow"></div>
+
+    <div class="container">
+        <div class="message-card">
+            <h1 id="headline">Will you be my Valentine?</h1>
+            <p id="status">Wait for it...</p>
+            <div style="height: 100px; position: relative; width: 100%;" id="arena">
+                <button id="yesBtn" class="btn">YES</button>
+                <button id="noBtn" class="btn">NO</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const yesBtn = document.getElementById('yesBtn');
+        const noBtn = document.getElementById('noBtn');
+        const status = document.getElementById('status');
+        const headline = document.getElementById('headline');
+        
+        let clickCount = 0;
+        let canEscape = true;
+
+        // Function to move button away
+        function escape(btn) {
+            if (!canEscape) return;
+            const x = Math.random() * (window.innerWidth - 150);
+            const y = Math.random() * (window.innerHeight - 100);
+            btn.style.position = 'fixed';
+            btn.style.left = x + 'px';
+            btn.style.top = y + 'px';
+        }
+
+        // Logic for NO button (always runs)
+        noBtn.addEventListener('mouseover', () => escape(noBtn));
+
+        // Logic for YES button
+        yesBtn.addEventListener('click', () => {
+            clickCount++;
+            
+            if (clickCount === 1) {
+                // THE PRANK: Turn Yes into No
+                yesBtn.innerHTML = "NO";
+                yesBtn.style.background = "transparent";
+                yesBtn.style.border = "1px solid #e5989b";
+                yesBtn.style.color = "#e5989b";
+                status.innerHTML = "Wait, that's not right...";
+                escape(yesBtn);
+            } else if (clickCount >= 5) {
+                // THE REVEAL: After chasing it a bit
+                canEscape = false;
+                yesBtn.innerHTML = "YES! ❤️";
+                yesBtn.style.background = "var(--primary)";
+                yesBtn.style.color = "white";
+                yesBtn.style.position = "relative";
+                yesBtn.style.left = "0";
+                yesBtn.style.top = "0";
+                yesBtn.style.transform = "scale(1.5)";
+                noBtn.style.display = "none";
+                headline.innerHTML = "Yay! Best Choice Ever!";
+                status.innerHTML = "I knew you couldn't resist.";
+                spawnButterflies();
+            }
+        });
+
+        // Make "Yes" (fake No) escape on hover after first click
+        yesBtn.addEventListener('mouseover', () => {
+            if (clickCount >= 1 && clickCount < 5) {
+                escape(yesBtn);
+                clickCount++; // Increment count on hover to speed up the game
+            }
+        });
+
+        function spawnButterflies() {
+            for(let i=0; i<40; i++) {
+                setTimeout(() => {
+                    const b = document.createElement('div');
+                    b.className = 'butterfly';
+                    b.innerHTML = '<div class="wing left"></div><div class="wing right"></div>';
+                    document.body.appendChild(b);
+                    let pX = Math.random() * window.innerWidth;
+                    let pY = window.innerHeight + 50;
+                    function m() {
+                        pY -= 3; pX += Math.sin(pY/50)*3;
+                        b.style.left = pX+'px'; b.style.top = pY+'px';
+                        if(pY > -50) requestAnimationFrame(m); else b.remove();
+                    }
+                    m();
+                }, i * 100);
+            }
+        }
+
+        // Initial Lock
+        yesBtn.style.opacity = "0.3";
+        yesBtn.style.pointerEvents = "none";
+        setTimeout(() => {
+            yesBtn.style.opacity = "1";
+            yesBtn.style.pointerEvents = "all";
+            status.innerHTML = "Try to click Yes...";
+        }, 3000);
+    </script>
+</body>
+</html>
