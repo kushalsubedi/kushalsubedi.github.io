@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>For Sagun</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,700&family=Inter:wght@300;600&display=swap');
+
+        :root {
+            --gold: #ffcf4d;
+            --soft-white: #f8fafc;
+            --deep-space: #020617;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--deep-space);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            perspective: 1000px;
+        }
+
+        /* Cinematic Background */
+        .stars {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 50% 50%, #1e1b4b 0%, #020617 100%);
+            z-index: -2;
+        }
+
+        /* LED Hanging Lights */
+        .led-curtain {
+            position: fixed;
+            top: -10px;
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            z-index: 1;
+        }
+
+        .wire {
+            width: 1px;
+            height: 80px;
+            background: rgba(255,255,255,0.1);
+            position: relative;
+            display: flex;
+            justify-content: center;
+        }
+
+        .bulb {
+            position: absolute;
+            bottom: -10px;
+            width: 14px;
+            height: 20px;
+            border-radius: 50% 50% 50% 50% / 70% 70% 30% 30%;
+            background: var(--gold);
+            box-shadow: 0 0 20px var(--gold), 0 0 40px var(--gold);
+            animation: pulse 2s infinite ease-in-out;
+        }
+
+        /* Immersive Card */
+        .container {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            padding: 4rem 2rem;
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 40px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.8);
+            transform-style: preserve-3d;
+            animation: floatCard 6s infinite ease-in-out;
+        }
+
+        /* Animated Cake Design */
+        .cake-wrapper {
+            margin-bottom: 3rem;
+            position: relative;
+            display: inline-block;
+        }
+
+        .cake-tier {
+            width: 120px;
+            height: 40px;
+            background: linear-gradient(#e2e8f0, #94a3b8);
+            border-radius: 8px;
+            position: relative;
+            margin: 0 auto;
+        }
+
+        .cake-tier.top { width: 80px; height: 35px; top: 5px; z-index: 2; }
+        
+        .candle {
+            width: 8px;
+            height: 25px;
+            background: #f43f5e;
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 4px;
+        }
+
+        .flame {
+            width: 14px;
+            height: 22px;
+            background: #fbbf24;
+            border-radius: 50% 50% 20% 20%;
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 0 20px #f59e0b;
+            animation: flameWobble 0.6s infinite alternate;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.8rem;
+            color: white;
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+        }
+
+        .name {
+            background: linear-gradient(to right, #fbbf24, #f43f5e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p {
+            font-size: 1.1rem;
+            color: #94a3b8;
+            line-height: 1.8;
+            margin-bottom: 2.5rem;
+            font-style: italic;
+        }
+
+        .btn {
+            background: white;
+            color: black;
+            border: none;
+            padding: 18px 45px;
+            border-radius: 100px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.4s;
+            text-transform: uppercase;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(255,255,255,0.4);
+            letter-spacing: 4px;
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; transform: scale(0.9); }
+            50% { opacity: 1; transform: scale(1.1); }
+        }
+
+        @keyframes flameWobble {
+            from { transform: translateX(-50%) rotate(-3deg) scale(1); }
+            to { transform: translateX(-50%) rotate(3deg) scale(1.1); }
+        }
+
+        @keyframes floatCard {
+            0%, 100% { transform: translateY(0) rotateX(0); }
+            50% { transform: translateY(-15px) rotateX(2deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="stars"></div>
+
+    <div class="led-curtain">
+        <div class="wire"><div class="bulb"></div></div>
+        <div class="wire" style="height: 120px;"><div class="bulb" style="animation-delay: 0.5s"></div></div>
+        <div class="wire" style="height: 90px;"><div class="bulb" style="animation-delay: 1.2s"></div></div>
+        <div class="wire" style="height: 140px;"><div class="bulb" style="animation-delay: 0.2s"></div></div>
+        <div class="wire" style="height: 100px;"><div class="bulb" style="animation-delay: 0.8s"></div></div>
+    </div>
+
+    <div class="container">
+        <div class="cake-wrapper">
+            <div class="cake-tier top">
+                <div class="candle"><div class="flame"></div></div>
+            </div>
+            <div class="cake-tier bottom"></div>
+        </div>
+
+        <h1>For <span class="name">Sagun</span></h1>
+        
+        <p>
+            May the year ahead be a quiet masterpiece<br>
+            unfolding with grace, etched with purpose, <br>
+            and glowing with the warmth of a thousand stars.
+
+            may thoes pretty eyes of yours always find beauty in the world, 
+            and may your heart be a sanctuary of kindness and love. Happy Birthday, Sagun!
+            
+        </p>
+
+        <button class="btn" onclick="ignite()">Ignite the Night</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script>
+        function ignite() {
+            const end = Date.now() + (4 * 1000);
+            const colors = ['#fbbf24', '#f43f5e', '#ffffff'];
+
+            (function frame() {
+                confetti({
+                    particleCount: 2,
+                    angle: 60,
+                    spread: 55,
+                    origin: { x: 0, y: 0.8 },
+                    colors: colors
+                });
+                confetti({
+                    particleCount: 2,
+                    angle: 120,
+                    spread: 55,
+                    origin: { x: 1, y: 0.8 },
+                    colors: colors
+                });
+
+                if (Date.now() < end) {
+                    requestAnimationFrame(frame);
+                }
+            }());
+
+            // Special burst
+            setTimeout(() => {
+                confetti({
+                    particleCount: 150,
+                    spread: 100,
+                    origin: { y: 0.6 },
+                    scalar: 1.5,
+                    shapes: ['star']
+                });
+            }, 500);
+        }
+    </script>
+</body>
+</html>
