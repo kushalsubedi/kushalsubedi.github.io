@@ -1,111 +1,173 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kushal Subedi - Terminal Portfolio</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Kushal Subedi | Terminal OS</title>
+
 <style>
   body {
     margin: 0;
-    padding: 0;
-    background: #0f111a;
+    background: #0b0f17;
     color: #c5c6c7;
-    font-family: "Courier New", Courier, monospace;
+    font-family: "Courier New", monospace;
   }
 
-  .container {
+  .terminal {
     max-width: 900px;
     margin: 40px auto;
     padding: 20px;
   }
 
-  .profile {
+  .line {
+    white-space: pre-wrap;
+    margin: 4px 0;
+  }
+
+  .green { color: #66fcf1; }
+  .dim { color: #777; }
+
+  .input-line {
     display: flex;
-    align-items: center;
-    gap: 20px;
-    margin-bottom: 30px;
+    margin-top: 10px;
   }
 
-  .profile img {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    border: 2px solid #66fcf1;
+  .prompt {
+    color: #66fcf1;
+    margin-right: 8px;
   }
 
-  h1 {
-    font-size: 1.8rem;
-    margin: 0;
+  input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #c5c6c7;
+    font-family: inherit;
+    width: 100%;
+  }
+
+  .boot {
     color: #45a29e;
   }
 
-  h2 {
-    font-size: 1.2rem;
-    color: #66fcf1;
-    margin: 2px 0 0 0;
+  .card {
+    margin-top: 10px;
+    padding: 10px;
+    border-left: 2px solid #66fcf1;
   }
-
-  section {
-    margin-top: 30px;
-  }
-
-  .section-title {
-    color: #45a29e;
-    font-weight: bold;
-    font-size: 1.1rem;
-    border-bottom: 1px dashed #66fcf1;
-    padding-bottom: 4px;
-    margin-bottom: 12px;
-  }
-
-  ul {
-    list-style: none;
-    padding-left: 20px;
-  }
-
-  li {
-    margin-bottom: 6px;
-    position: relative;
-  }
-
-  li::before {
-    content: ">";
-    position: absolute;
-    left: -20px;
-    color: #66fcf1;
-  }
-
 </style>
 </head>
+
 <body>
 
-<div class="container">
-  <div class="profile">
-    <img src="me.jpg" alt="Kushal Subedi">
-    <div>
-      <h1>Kushal Subedi</h1>
-      <h2>Software Engineer | DevOps | Python</h2>
-    </div>
-  </div>
+<div class="terminal" id="terminal"></div>
 
-  <section>
-    <div class="section-title">Leadership</div>
-    <ul>
-      <li>Executive Member at CSITAN-Pokhara, organizing technical events and workshops</li>
-      <li>Led student executive team to foster collaboration and innovation</li>
-      <li>Built community networks among students, professionals, and industry leaders</li>
-    </ul>
-  </section>
+<script>
+const terminal = document.getElementById("terminal");
 
-  <section>
-    <div class="section-title">Mentorship</div>
-    <ul>
-      <li>Mentored 100+ students in Python, Web Development, and DevOps</li>
-      <li>Delivered workshops simplifying complex Cloud & DevOps concepts</li>
-      <li>Guided learners to successful career transitions with hands-on training</li>
-    </ul>
-  </section>
-</div>
+const bootLines = [
+  "> booting portfolio...",
+  "> loading profile...",
+  "> initializing dev environment...",
+  "> connecting to github.io...",
+  "> welcome kushal_"
+];
+
+let i = 0;
+
+function typeBoot() {
+  if (i < bootLines.length) {
+    const line = document.createElement("div");
+    line.className = "line boot";
+    line.textContent = bootLines[i];
+    terminal.appendChild(line);
+    i++;
+    setTimeout(typeBoot, 700);
+  } else {
+    setTimeout(initTerminal, 500);
+  }
+}
+
+function initTerminal() {
+  printLine("\nType 'help' to see commands\n");
+
+  const inputLine = document.createElement("div");
+  inputLine.className = "input-line";
+
+  const prompt = document.createElement("span");
+  prompt.className = "prompt";
+  prompt.textContent = "kushal@github:~$";
+
+  const input = document.createElement("input");
+  input.autofocus = true;
+
+  input.addEventListener("keydown", function(e) {
+    if (e.key === "Enter") {
+      handleCommand(input.value);
+      input.value = "";
+    }
+  });
+
+  inputLine.appendChild(prompt);
+  inputLine.appendChild(input);
+  terminal.appendChild(inputLine);
+}
+
+function printLine(text, cls="line") {
+  const div = document.createElement("div");
+  div.className = cls;
+  div.textContent = text;
+  terminal.appendChild(div);
+  terminal.scrollTop = terminal.scrollHeight;
+}
+
+function handleCommand(cmd) {
+  printLine(`kushal@github:~$ ${cmd}`, "line dim");
+
+  switch(cmd.trim().toLowerCase()) {
+    case "help":
+      printLine("Available commands:");
+      printLine("  about      - who is kushal");
+      printLine("  skills     - tech stack");
+      printLine("  projects   - show projects");
+      printLine("  contact    - contact info");
+      break;
+
+    case "about":
+      printCard("DevOps Engineer from Nepal.\nFocused on Linux, Docker, CI/CD, AWS, backend systems.");
+      break;
+
+    case "skills":
+      printCard("Python, Node.js, Docker, AWS, Linux, CI/CD, System Design");
+      break;
+
+    case "projects":
+      printCard("suSHH - SSH manager\nCI/CD pipelines\nDevOps lab experiments");
+      break;
+
+    case "contact":
+      printCard("GitHub: github.com/yourusername\nEmail: kushal@example.com");
+      break;
+
+    case "clear":
+      terminal.innerHTML = "";
+      initTerminal();
+      break;
+
+    default:
+      printLine("Command not found. Type 'help'");
+  }
+}
+
+function printCard(text) {
+  const div = document.createElement("div");
+  div.className = "card";
+  div.textContent = text;
+  terminal.appendChild(div);
+}
+
+typeBoot();
+</script>
 
 </body>
 </html>
