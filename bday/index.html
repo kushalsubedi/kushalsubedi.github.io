@@ -17,24 +17,23 @@
 
         body {
             background-color: var(--deep-space);
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             font-family: 'Inter', sans-serif;
             overflow: hidden;
             perspective: 1000px;
+            padding: 20px;
         }
 
-        /* Cinematic Background */
         .stars {
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
+            inset: 0;
             background: radial-gradient(circle at 50% 50%, #1e1b4b 0%, #020617 100%);
             z-index: -2;
         }
 
-        /* LED Hanging Lights */
         .led-curtain {
             position: fixed;
             top: -10px;
@@ -42,12 +41,13 @@
             display: flex;
             justify-content: space-around;
             z-index: 1;
+            opacity: 0.8;
         }
 
         .wire {
             width: 1px;
-            height: 80px;
-            background: rgba(255,255,255,0.1);
+            height: 90px;
+            background: rgba(255,255,255,0.08);
             position: relative;
             display: flex;
             justify-content: center;
@@ -56,80 +56,76 @@
         .bulb {
             position: absolute;
             bottom: -10px;
-            width: 14px;
-            height: 20px;
-            border-radius: 50% 50% 50% 50% / 70% 70% 30% 30%;
+            width: 12px;
+            height: 18px;
+            border-radius: 50%;
             background: var(--gold);
-            box-shadow: 0 0 20px var(--gold), 0 0 40px var(--gold);
-            animation: pulse 2s infinite ease-in-out;
+            box-shadow: 0 0 18px var(--gold);
+            animation: pulse 2.2s infinite ease-in-out;
         }
 
-        /* Immersive Card */
         .container {
             position: relative;
             z-index: 10;
             text-align: center;
-            padding: 4rem 2rem;
-            background: rgba(255, 255, 255, 0.02);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 40px;
-            max-width: 500px;
-            width: 90%;
-            box-shadow: 0 40px 100px rgba(0,0,0,0.8);
+            padding: 2.2rem 1.6rem; /* reduced height */
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(22px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 28px;
+            max-width: 420px; /* smaller card */
+            width: 92%;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.75);
             transform-style: preserve-3d;
             animation: floatCard 6s infinite ease-in-out;
         }
 
-        /* Animated Cake Design */
-        .cake-wrapper {
-            margin-bottom: 3rem;
-            position: relative;
-            display: inline-block;
-        }
+        .cake-wrapper { margin-bottom: 1.8rem; }
 
         .cake-tier {
-            width: 120px;
-            height: 40px;
+            width: 110px;
+            height: 34px;
             background: linear-gradient(#e2e8f0, #94a3b8);
             border-radius: 8px;
-            position: relative;
             margin: 0 auto;
+            position: relative;
         }
 
-        .cake-tier.top { width: 80px; height: 35px; top: 5px; z-index: 2; }
-        
+        .cake-tier.top {
+            width: 75px;
+            height: 30px;
+            margin-bottom: -6px;
+        }
+
         .candle {
-            width: 8px;
-            height: 25px;
+            width: 7px;
+            height: 22px;
             background: #f43f5e;
             position: absolute;
-            top: -20px;
+            top: -18px;
             left: 50%;
             transform: translateX(-50%);
             border-radius: 4px;
         }
 
         .flame {
-            width: 14px;
-            height: 22px;
+            width: 12px;
+            height: 18px;
             background: #fbbf24;
             border-radius: 50% 50% 20% 20%;
             position: absolute;
-            top: -25px;
+            top: -22px;
             left: 50%;
             transform: translateX(-50%);
-            box-shadow: 0 0 20px #f59e0b;
+            box-shadow: 0 0 16px #f59e0b;
             animation: flameWobble 0.6s infinite alternate;
         }
 
         h1 {
             font-family: 'Playfair Display', serif;
-            font-size: 2.8rem;
+            font-size: 2.2rem;
             color: white;
-            margin-bottom: 1.5rem;
-            font-weight: 700;
+            margin-bottom: 1rem;
         }
 
         .name {
@@ -139,10 +135,10 @@
         }
 
         p {
-            font-size: 1.1rem;
+            font-size: 1rem;
             color: #94a3b8;
-            line-height: 1.8;
-            margin-bottom: 2.5rem;
+            line-height: 1.6;
+            margin-bottom: 1.6rem;
             font-style: italic;
         }
 
@@ -150,23 +146,22 @@
             background: white;
             color: black;
             border: none;
-            padding: 18px 45px;
-            border-radius: 100px;
-            font-size: 0.9rem;
+            padding: 14px 34px;
+            border-radius: 999px;
+            font-size: 0.85rem;
             font-weight: 600;
-            letter-spacing: 2px;
+            letter-spacing: 1.5px;
             cursor: pointer;
-            transition: all 0.4s;
+            transition: all 0.3s ease;
             text-transform: uppercase;
         }
 
         .btn:hover {
             transform: scale(1.05);
-            box-shadow: 0 0 30px rgba(255,255,255,0.4);
-            letter-spacing: 4px;
+            box-shadow: 0 0 25px rgba(255,255,255,0.35);
+            letter-spacing: 3px;
         }
 
-        /* Animations */
         @keyframes pulse {
             0%, 100% { opacity: 0.6; transform: scale(0.9); }
             50% { opacity: 1; transform: scale(1.1); }
@@ -178,8 +173,8 @@
         }
 
         @keyframes floatCard {
-            0%, 100% { transform: translateY(0) rotateX(0); }
-            50% { transform: translateY(-15px) rotateX(2deg); }
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
         }
     </style>
 </head>
@@ -188,10 +183,10 @@
 
     <div class="led-curtain">
         <div class="wire"><div class="bulb"></div></div>
-        <div class="wire" style="height: 120px;"><div class="bulb" style="animation-delay: 0.5s"></div></div>
-        <div class="wire" style="height: 90px;"><div class="bulb" style="animation-delay: 1.2s"></div></div>
-        <div class="wire" style="height: 140px;"><div class="bulb" style="animation-delay: 0.2s"></div></div>
-        <div class="wire" style="height: 100px;"><div class="bulb" style="animation-delay: 0.8s"></div></div>
+        <div class="wire" style="height:110px"><div class="bulb" style="animation-delay:.4s"></div></div>
+        <div class="wire" style="height:85px"><div class="bulb" style="animation-delay:.9s"></div></div>
+        <div class="wire" style="height:120px"><div class="bulb" style="animation-delay:.2s"></div></div>
+        <div class="wire" style="height:95px"><div class="bulb" style="animation-delay:.7s"></div></div>
     </div>
 
     <div class="container">
@@ -199,19 +194,16 @@
             <div class="cake-tier top">
                 <div class="candle"><div class="flame"></div></div>
             </div>
-            <div class="cake-tier bottom"></div>
+            <div class="cake-tier"></div>
         </div>
 
         <h1>For <span class="name">Sagun</span></h1>
-        
-        <p>
-            May the year ahead be a quiet masterpiece<br>
-            unfolding with grace, etched with purpose, <br>
-            and glowing with the warmth of a thousand stars.
 
-            may thoes pretty eyes of yours always find beauty in the world, 
-            and may your heart be a sanctuary of kindness and love. Happy Birthday, Sagun!
-            
+        <p>
+            May the year ahead be a quiet masterpiece unfolding with grace,
+            etched with purpose, and glowing with warmth.
+            May your eyes always find beauty in the world,
+            and your heart stay kind and full of light. Happy Birthday.
         </p>
 
         <button class="btn" onclick="ignite()">Ignite the Night</button>
@@ -220,40 +212,19 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script>
         function ignite() {
-            const end = Date.now() + (4 * 1000);
+            const end = Date.now() + 3500;
             const colors = ['#fbbf24', '#f43f5e', '#ffffff'];
 
             (function frame() {
-                confetti({
-                    particleCount: 2,
-                    angle: 60,
-                    spread: 55,
-                    origin: { x: 0, y: 0.8 },
-                    colors: colors
-                });
-                confetti({
-                    particleCount: 2,
-                    angle: 120,
-                    spread: 55,
-                    origin: { x: 1, y: 0.8 },
-                    colors: colors
-                });
+                confetti({ particleCount: 2, angle: 60, spread: 55, origin: { x: 0, y: 0.8 }, colors });
+                confetti({ particleCount: 2, angle: 120, spread: 55, origin: { x: 1, y: 0.8 }, colors });
 
-                if (Date.now() < end) {
-                    requestAnimationFrame(frame);
-                }
-            }());
+                if (Date.now() < end) requestAnimationFrame(frame);
+            })();
 
-            // Special burst
             setTimeout(() => {
-                confetti({
-                    particleCount: 150,
-                    spread: 100,
-                    origin: { y: 0.6 },
-                    scalar: 1.5,
-                    shapes: ['star']
-                });
-            }, 500);
+                confetti({ particleCount: 140, spread: 90, origin: { y: 0.6 }, scalar: 1.4, shapes: ['star'] });
+            }, 400);
         }
     </script>
 </body>
