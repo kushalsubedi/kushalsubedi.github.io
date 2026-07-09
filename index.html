@@ -2,176 +2,690 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Kushal Subedi | Terminal OS</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Kushal Subedi — Software Engineer · DevOps &amp; AI</title>
+<meta name="description" content="Kushal Subedi — Software Engineer building cloud-native systems, CI/CD pipelines, and AI-powered products. AWS, Kubernetes, Terraform, Python." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@600;700&display=swap" rel="stylesheet" />
 <style>
-  body {
-    margin: 0;
-    background: #0b0f17;
-    color: #c5c6c7;
-    font-family: "Courier New", monospace;
+  :root{
+    --bg:#0a0e17;
+    --bg-2:#0d121d;
+    --surface:#111826;
+    --surface-2:#141c2c;
+    --line:rgba(126,158,204,.14);
+    --line-strong:rgba(126,158,204,.28);
+    --text:#e7ecf3;
+    --muted:#8a97ad;
+    --faint:#5b6577;
+    --teal:#2dd4bf;
+    --teal-dim:#1a8577;
+    --amber:#fbbf24;
+    --live:#4ade80;
+    --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+    --sans:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,sans-serif;
+    --cond:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-serif;
   }
 
-  .terminal {
-    max-width: 900px;
-    margin: 40px auto;
-    padding: 20px;
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    font-size:16px;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    /* faint blueprint grid */
+    background-image:
+      linear-gradient(var(--line) 1px,transparent 1px),
+      linear-gradient(90deg,var(--line) 1px,transparent 1px);
+    background-size:64px 64px;
+    background-position:center top;
+  }
+  body::before{
+    content:"";
+    position:fixed;inset:0;
+    background:radial-gradient(120% 80% at 50% -10%,rgba(45,212,191,.10),transparent 60%);
+    pointer-events:none;z-index:0;
   }
 
-  .line {
-    white-space: pre-wrap;
-    margin: 4px 0;
+  a{color:inherit;text-decoration:none}
+  ::selection{background:rgba(45,212,191,.28);color:#fff}
+
+  .wrap{max-width:1080px;margin:0 auto;padding:0 28px;position:relative;z-index:1}
+
+  /* ---------- eyebrow / labels ---------- */
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:12px;
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    color:var(--teal);
+    display:inline-flex;align-items:center;gap:10px;
+  }
+  .eyebrow::before{
+    content:"";width:22px;height:1px;background:var(--teal);opacity:.6;
   }
 
-  .green { color: #66fcf1; }
-  .dim { color: #777; }
+  /* ---------- nav ---------- */
+  header.nav{
+    position:sticky;top:0;z-index:20;
+    backdrop-filter:blur(10px);
+    background:rgba(10,14,23,.72);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-inner{
+    display:flex;align-items:center;justify-content:space-between;
+    height:60px;
+  }
+  .brand{font-family:var(--mono);font-size:14px;font-weight:500;letter-spacing:.02em}
+  .brand b{color:var(--teal)}
+  .nav-links{display:flex;gap:26px;align-items:center;font-family:var(--mono);font-size:13px}
+  .nav-links a{color:var(--muted);transition:color .18s}
+  .nav-links a:hover,.nav-links a:focus-visible{color:var(--text)}
+  .nav-cta{
+    border:1px solid var(--line-strong);
+    padding:7px 14px;border-radius:6px;color:var(--text)!important;
+    transition:border-color .18s,background .18s;
+  }
+  .nav-cta:hover{border-color:var(--teal);background:rgba(45,212,191,.08)}
+  @media(max-width:720px){.nav-links a:not(.nav-cta){display:none}}
 
-  .input-line {
-    display: flex;
-    margin-top: 10px;
+  /* ---------- hero ---------- */
+  .hero{padding:72px 0 60px}
+  .hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:48px;align-items:center}
+  @media(max-width:860px){.hero-grid{grid-template-columns:1fr;gap:36px}}
+
+  .status-row{display:flex;align-items:center;gap:12px;margin-bottom:22px;flex-wrap:wrap}
+  .avail{
+    font-family:var(--mono);font-size:12px;letter-spacing:.08em;color:var(--muted);
+    display:inline-flex;align-items:center;gap:8px;
+    border:1px solid var(--line);border-radius:100px;padding:5px 12px;
+  }
+  .pulse{width:8px;height:8px;border-radius:50%;background:var(--live);
+    box-shadow:0 0 0 0 rgba(74,222,128,.6);animation:pulse 2.4s infinite}
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(74,222,128,.55)}
+    70%{box-shadow:0 0 0 8px rgba(74,222,128,0)}
+    100%{box-shadow:0 0 0 0 rgba(74,222,128,0)}
+  }
+  .loc{font-family:var(--mono);font-size:12px;color:var(--faint);letter-spacing:.05em}
+
+  h1.name{
+    font-family:var(--cond);
+    font-weight:700;
+    font-size:clamp(48px,8.5vw,88px);
+    line-height:.95;
+    letter-spacing:-.01em;
+    margin:0 0 18px;
+  }
+  h1.name span{color:var(--teal)}
+  .role{
+    font-family:var(--mono);
+    font-size:clamp(14px,2.4vw,17px);
+    color:var(--text);
+    letter-spacing:.02em;
+    margin-bottom:22px;
+  }
+  .role .sep{color:var(--faint);margin:0 8px}
+  .lede{color:var(--muted);font-size:17px;max-width:44ch;margin:0 0 30px}
+  .hero-actions{display:flex;gap:14px;flex-wrap:wrap}
+  .btn{
+    font-family:var(--mono);font-size:13px;letter-spacing:.03em;
+    padding:12px 20px;border-radius:8px;cursor:pointer;transition:.18s;
+    display:inline-flex;align-items:center;gap:9px;
+  }
+  .btn-primary{background:var(--teal);color:#04211d;font-weight:600;border:1px solid var(--teal)}
+  .btn-primary:hover{background:#5eead4;transform:translateY(-1px)}
+  .btn-ghost{border:1px solid var(--line-strong);color:var(--text)}
+  .btn-ghost:hover{border-color:var(--teal);color:var(--teal)}
+
+  /* ---------- terminal widget (small) ---------- */
+  .term{
+    background:linear-gradient(180deg,#0c1220,#0a0f1a);
+    border:1px solid var(--line-strong);
+    border-radius:12px;
+    overflow:hidden;
+    box-shadow:0 24px 60px -30px rgba(0,0,0,.8);
+  }
+  .term-bar{
+    display:flex;align-items:center;gap:8px;
+    padding:11px 14px;border-bottom:1px solid var(--line);
+    background:rgba(255,255,255,.02);
+  }
+  .dot{width:11px;height:11px;border-radius:50%}
+  .d1{background:#ff5f56}.d2{background:#ffbd2e}.d3{background:#27c93f}
+  .term-title{margin-left:8px;font-family:var(--mono);font-size:11.5px;color:var(--faint)}
+  .term-body{
+    padding:16px;font-family:var(--mono);font-size:13px;line-height:1.7;
+    height:250px;overflow-y:auto;
+  }
+  .term-body::-webkit-scrollbar{width:8px}
+  .term-body::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:8px}
+  .t-line{white-space:pre-wrap;word-break:break-word}
+  .t-boot{color:var(--teal-dim)}
+  .t-dim{color:var(--faint)}
+  .t-out{color:var(--muted)}
+  .t-key{color:var(--teal)}
+  .t-in{display:flex;gap:9px;margin-top:6px}
+  .t-prompt{color:var(--teal);white-space:nowrap}
+  .t-in input{
+    background:transparent;border:none;outline:none;color:var(--text);
+    font-family:inherit;font-size:13px;width:100%;caret-color:var(--teal);
   }
 
-  .prompt {
-    color: #66fcf1;
-    margin-right: 8px;
+  /* ---------- section scaffolding ---------- */
+  section{padding:66px 0;border-top:1px solid var(--line)}
+  .sec-head{margin-bottom:40px}
+  .sec-head h2{
+    font-family:var(--cond);font-weight:700;
+    font-size:clamp(28px,4.5vw,40px);letter-spacing:-.01em;margin:14px 0 0;
   }
 
-  input {
-    background: transparent;
-    border: none;
-    outline: none;
-    color: #c5c6c7;
-    font-family: inherit;
-    width: 100%;
+  /* ---------- stack ---------- */
+  .stack-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  @media(max-width:720px){.stack-grid{grid-template-columns:1fr}}
+  .stack-cell{background:var(--surface);padding:26px}
+  .stack-cell h3{
+    font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--teal);margin:0 0 16px;font-weight:500;
+  }
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{
+    font-family:var(--mono);font-size:12.5px;color:var(--text);
+    border:1px solid var(--line-strong);border-radius:6px;padding:6px 11px;
+    background:rgba(255,255,255,.015);transition:.16s;
+  }
+  .chip:hover{border-color:var(--teal);color:var(--teal)}
+
+  /* ---------- pipeline / experience (signature) ---------- */
+  .pipe{position:relative;padding-left:36px}
+  .pipe::before{
+    content:"";position:absolute;left:9px;top:8px;bottom:8px;width:2px;
+    background:linear-gradient(180deg,var(--teal),var(--teal-dim) 60%,var(--line-strong));
+  }
+  .stage{position:relative;padding-bottom:38px}
+  .stage:last-child{padding-bottom:0}
+  .node{
+    position:absolute;left:-31px;top:4px;width:20px;height:20px;border-radius:50%;
+    background:var(--bg);border:2px solid var(--teal-dim);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .node i{width:7px;height:7px;border-radius:50%;background:var(--teal)}
+  .stage.current .node{border-color:var(--live)}
+  .stage.current .node i{background:var(--live);animation:pulse 2.4s infinite}
+  .stage-card{
+    background:var(--surface);border:1px solid var(--line);border-radius:12px;
+    padding:22px 24px;transition:border-color .18s,transform .18s;
+  }
+  .stage-card:hover{border-color:var(--line-strong);transform:translateX(3px)}
+  .stage-top{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:baseline}
+  .stage-co{font-family:var(--cond);font-weight:700;font-size:21px;letter-spacing:.01em}
+  .stage-when{font-family:var(--mono);font-size:12px;color:var(--faint);white-space:nowrap}
+  .stage-role{font-family:var(--mono);font-size:13px;color:var(--teal);margin:3px 0 2px}
+  .stage-meta{font-family:var(--mono);font-size:11.5px;color:var(--faint);letter-spacing:.05em;margin-bottom:14px}
+  .stage-card ul{margin:0;padding:0;list-style:none}
+  .stage-card li{position:relative;padding-left:20px;color:var(--muted);font-size:14.5px;margin:8px 0}
+  .stage-card li::before{content:"";position:absolute;left:0;top:11px;width:8px;height:1px;background:var(--teal)}
+  .tag-live{
+    font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--live);border:1px solid rgba(74,222,128,.4);border-radius:5px;padding:2px 8px;
+    display:inline-flex;align-items:center;gap:6px;
+  }
+  .tag-live .pulse{width:6px;height:6px}
+  .tag-done{
+    font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--faint);border:1px solid var(--line);border-radius:5px;padding:2px 8px;
   }
 
-  .boot {
-    color: #45a29e;
+  /* ---------- projects ---------- */
+  .proj-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+  @media(max-width:720px){.proj-grid{grid-template-columns:1fr}}
+  .proj{
+    background:var(--surface);border:1px solid var(--line);border-radius:12px;
+    padding:24px;transition:.18s;display:flex;flex-direction:column;gap:12px;
   }
+  .proj:hover{border-color:var(--teal);transform:translateY(-3px)}
+  .proj-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+  .proj h3{font-family:var(--cond);font-weight:700;font-size:20px;margin:0}
+  .proj-year{font-family:var(--mono);font-size:12px;color:var(--faint)}
+  .proj p{margin:0;color:var(--muted);font-size:14.5px}
+  .proj-stack{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;padding-top:6px}
+  .proj-stack span{font-family:var(--mono);font-size:11px;color:var(--teal);opacity:.85}
+  .proj-link{font-family:var(--mono);font-size:12px;color:var(--teal);border-top:1px solid var(--line);padding-top:12px;margin-top:4px}
+  .proj-link:hover{color:#5eead4}
 
-  .card {
-    margin-top: 10px;
-    padding: 10px;
-    border-left: 2px solid #66fcf1;
+  /* ---------- two-column list (teaching / education) ---------- */
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:40px}
+  @media(max-width:720px){.cols{grid-template-columns:1fr;gap:34px}}
+  .mini{margin-bottom:26px}
+  .mini h4{font-family:var(--cond);font-weight:700;font-size:18px;margin:0 0 2px}
+  .mini .m-sub{font-family:var(--mono);font-size:12px;color:var(--teal);margin-bottom:4px}
+  .mini .m-when{font-family:var(--mono);font-size:11.5px;color:var(--faint);margin-bottom:8px}
+  .mini p{margin:0;color:var(--muted);font-size:14px}
+
+  /* ---------- contact ---------- */
+  .contact{text-align:center;padding:84px 0}
+  .contact h2{font-family:var(--cond);font-weight:700;font-size:clamp(34px,6vw,58px);margin:16px 0 10px;letter-spacing:-.01em}
+  .contact p{color:var(--muted);max-width:48ch;margin:0 auto 34px}
+  .contact-links{display:flex;justify-content:center;gap:14px;flex-wrap:wrap}
+  .clink{
+    font-family:var(--mono);font-size:13px;
+    border:1px solid var(--line-strong);border-radius:8px;padding:12px 18px;
+    color:var(--text);transition:.18s;display:inline-flex;gap:9px;align-items:center;
   }
+  .clink:hover{border-color:var(--teal);color:var(--teal);background:rgba(45,212,191,.06)}
+  .clink b{color:var(--teal);font-weight:500}
+
+  footer{border-top:1px solid var(--line);padding:26px 0}
+  .foot-inner{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;
+    font-family:var(--mono);font-size:12px;color:var(--faint)}
+
+  /* reveal on scroll */
+  .reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
+  .reveal.in{opacity:1;transform:none}
+
+  @media(prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+    .reveal{opacity:1;transform:none}
+  }
+  :focus-visible{outline:2px solid var(--teal);outline-offset:3px;border-radius:4px}
 </style>
 </head>
-
 <body>
 
-<div class="terminal" id="terminal"></div>
+<header class="nav">
+  <div class="wrap nav-inner">
+    <div class="brand">kushal<b>.</b>subedi</div>
+    <nav class="nav-links">
+      <a href="#stack">stack</a>
+      <a href="#work">work</a>
+      <a href="#projects">projects</a>
+      <a href="#contact">contact</a>
+      <a class="nav-cta" href="resume.pdf" target="_blank" rel="noopener">résumé</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ============ HERO ============ -->
+<div class="wrap hero">
+  <div class="hero-grid">
+    <div>
+      <div class="status-row">
+        <span class="avail"><span class="pulse"></span>Open to new roles</span>
+        <span class="loc">Kathmandu, Nepal · Remote</span>
+      </div>
+      <h1 class="name">Kushal<br>Sub<span>edi</span></h1>
+      <div class="role">Software Engineer<span class="sep">/</span>AI Developer<span class="sep">/</span>DevOps</div>
+      <p class="lede">I build cloud-native systems that stay up — shipping CI/CD pipelines, infrastructure as code, and AI-powered products on AWS and Kubernetes.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#contact">Get in touch</a>
+        <a class="btn btn-ghost" href="#work">View experience</a>
+      </div>
+    </div>
+
+    <!-- small terminal widget -->
+    <div class="term" aria-label="Interactive terminal">
+      <div class="term-bar">
+        <span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span>
+        <span class="term-title">kushal@github: ~</span>
+      </div>
+      <div class="term-body" id="term" tabindex="0"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ STACK ============ -->
+<section id="stack">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Technical expertise</span>
+      <h2>The stack I build on</h2>
+    </div>
+    <div class="stack-grid reveal">
+      <div class="stack-cell">
+        <h3>Cloud &amp; Infrastructure</h3>
+        <div class="chips">
+          <span class="chip">AWS EKS</span><span class="chip">EC2</span><span class="chip">Lambda</span>
+          <span class="chip">CloudWatch</span><span class="chip">Terraform</span>
+          <span class="chip">Kubernetes</span><span class="chip">Docker</span>
+        </div>
+      </div>
+      <div class="stack-cell">
+        <h3>DevOps &amp; Automation</h3>
+        <div class="chips">
+          <span class="chip">GitHub Actions</span><span class="chip">Jenkins</span><span class="chip">CI/CD</span>
+          <span class="chip">Nginx</span><span class="chip">Infrastructure as Code</span>
+        </div>
+      </div>
+      <div class="stack-cell">
+        <h3>Development &amp; AI</h3>
+        <div class="chips">
+          <span class="chip">Python</span><span class="chip">Django</span><span class="chip">Go</span>
+          <span class="chip">JavaScript</span><span class="chip">REST APIs</span>
+          <span class="chip">Microservices</span><span class="chip">LLM Integration</span>
+        </div>
+      </div>
+      <div class="stack-cell">
+        <h3>Monitoring &amp; Security</h3>
+        <div class="chips">
+          <span class="chip">ELK Stack</span><span class="chip">Grafana</span><span class="chip">Prometheus</span>
+          <span class="chip">CloudTrail</span><span class="chip">Semgrep</span><span class="chip">SonarQube</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ EXPERIENCE PIPELINE ============ -->
+<section id="work">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Experience · deployment log</span>
+      <h2>Where I've shipped</h2>
+    </div>
+
+    <div class="pipe">
+      <!-- CURRENT -->
+      <div class="stage current reveal">
+        <span class="node"><i></i></span>
+        <div class="stage-card">
+          <div class="stage-top">
+            <div>
+              <div class="stage-co">CopilotHQ</div>
+              <div class="stage-role">AI Developer &amp; DevOps Engineer</div>
+            </div>
+            <div style="text-align:right">
+              <span class="tag-live"><span class="pulse"></span>Live</span>
+              <div class="stage-when" style="margin-top:8px">Jun 2026 — Present</div>
+            </div>
+          </div>
+          <div class="stage-meta">Australia · Remote</div>
+          <ul>
+            <li>Build AI-powered features and LLM integrations, taking them from prototype to production.</li>
+            <li>Own the deployment path — CI/CD, containerised services, and cloud infrastructure keeping releases fast and reliable.</li>
+            <li>Bridge model development and platform operations so AI systems ship with monitoring and cost control built in.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- LEAPFROG -->
+      <div class="stage reveal">
+        <span class="node"><i></i></span>
+        <div class="stage-card">
+          <div class="stage-top">
+            <div>
+              <div class="stage-co">Leapfrog Technology Inc</div>
+              <div class="stage-role">DevOps &amp; SecOps Fellow</div>
+            </div>
+            <div style="text-align:right">
+              <span class="tag-done">Shipped</span>
+              <div class="stage-when" style="margin-top:8px">May 2025 — Aug 2025</div>
+            </div>
+          </div>
+          <div class="stage-meta">Kathmandu, Nepal</div>
+          <ul>
+            <li>Designed secure AWS infrastructure with automated compliance monitoring and vulnerability remediation.</li>
+            <li>Built CI/CD pipelines with integrated security scanning (Semgrep, SonarQube) for ECS deployments.</li>
+            <li>Ran production workloads across on-prem Kubernetes (kubeadm) and AWS ECS, keeping thousands of daily users online.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- LEGALITIS -->
+      <div class="stage reveal">
+        <span class="node"><i></i></span>
+        <div class="stage-card">
+          <div class="stage-top">
+            <div>
+              <div class="stage-co">The Legalitis</div>
+              <div class="stage-role">Software Engineer</div>
+            </div>
+            <div style="text-align:right">
+              <span class="tag-done">Shipped</span>
+              <div class="stage-when" style="margin-top:8px">Jan 2025 — May 2025</div>
+            </div>
+          </div>
+          <div class="stage-meta">Remote</div>
+          <ul>
+            <li>Built scalable Django REST APIs for a legal document processing platform, working closely with the frontend team.</li>
+            <li>Introduced a microservices and Docker deployment strategy that made releases faster and easier to scale.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- ASARFI -->
+      <div class="stage reveal">
+        <span class="node"><i></i></span>
+        <div class="stage-card">
+          <div class="stage-top">
+            <div>
+              <div class="stage-co">Asarfi</div>
+              <div class="stage-role">DevOps Engineer</div>
+            </div>
+            <div style="text-align:right">
+              <span class="tag-done">Shipped</span>
+              <div class="stage-when" style="margin-top:8px">Jun 2024 — Feb 2025</div>
+            </div>
+          </div>
+          <div class="stage-meta">Pokhara, Gandaki</div>
+          <ul>
+            <li>Orchestrated microservices on AWS EKS with automated scaling and secure networking.</li>
+            <li>Wrote Terraform IaC that cut provisioning time from hours to minutes.</li>
+            <li>Stood up centralised monitoring with ELK and Grafana, and mentored the team on cloud-native practices.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PROJECTS ============ -->
+<section id="projects">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Selected work</span>
+      <h2>Things I've built</h2>
+    </div>
+    <div class="proj-grid">
+      <div class="proj reveal">
+        <div class="proj-top"><h3>suSHH</h3><span class="proj-year">Tool</span></div>
+        <p>An SSH manager that keeps servers, keys, and sessions organised — built for engineers who live in the terminal.</p>
+        <div class="proj-stack"><span>Go</span><span>CLI</span><span>SSH</span></div>
+        <a class="proj-link" href="https://github.com/kushalsubedi/suSHH" target="_blank" rel="noopener">github.com/kushalsubedi/suSHH →</a>
+      </div>
+
+      <div class="proj reveal">
+        <div class="proj-top"><h3>deploya</h3><span class="proj-year">Tool</span></div>
+        <p>A pipeline builder that turns deployment steps into repeatable, self-serve workflows.</p>
+        <div class="proj-stack"><span>Python</span><span>CI/CD</span><span>Docker</span></div>
+        <a class="proj-link" href="https://github.com/kushalsubedi/deploya" target="_blank" rel="noopener">github.com/kushalsubedi/deploya →</a>
+      </div>
+
+      <div class="proj reveal">
+        <div class="proj-top"><h3>Stock Prediction Platform</h3><span class="proj-year">2024</span></div>
+        <p>An LSTM-based prediction system that processes market data in real time and serves forecasts through a Django API.</p>
+        <div class="proj-stack"><span>Python</span><span>TensorFlow</span><span>Django</span><span>AWS</span></div>
+      </div>
+
+      <div class="proj reveal">
+        <div class="proj-top"><h3>Cloud-Native E-commerce</h3><span class="proj-year">2023</span></div>
+        <p>A full-stack store with a microservices design, secure payments, and live inventory management.</p>
+        <div class="proj-stack"><span>Django</span><span>React</span><span>Docker</span><span>AWS</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TEACHING + EDUCATION ============ -->
+<section id="more">
+  <div class="wrap">
+    <div class="cols">
+      <div class="reveal">
+        <div class="sec-head" style="margin-bottom:28px">
+          <span class="eyebrow">Mentorship &amp; teaching</span>
+          <h2 style="font-size:clamp(24px,4vw,32px)">Passing it on</h2>
+        </div>
+        <div class="mini">
+          <h4>Technical Mentor</h4>
+          <div class="m-sub">Python · Web Dev · DevOps · Cloud</div>
+          <div class="m-when">2021 — 2025</div>
+          <p>Mentored students through Python, Django, and Flask, and ran DevOps and cloud workshops that made hard concepts approachable.</p>
+        </div>
+        <div class="mini">
+          <h4>Mathematics Teacher</h4>
+          <div class="m-sub">Diamond Model School, Pokhara</div>
+          <div class="m-when">2019 — 2023</div>
+          <p>Taught algebra through calculus to secondary students, connecting math to real programming to draw them toward STEM.</p>
+        </div>
+      </div>
+
+      <div class="reveal">
+        <div class="sec-head" style="margin-bottom:28px">
+          <span class="eyebrow">Education &amp; community</span>
+          <h2 style="font-size:clamp(24px,4vw,32px)">Foundations</h2>
+        </div>
+        <div class="mini">
+          <h4>BSc Computer Science &amp; IT</h4>
+          <div class="m-sub">Soch College of IT · Tribhuvan University</div>
+          <div class="m-when">2019 — 2024 · Pokhara, Gandaki</div>
+        </div>
+        <div class="mini">
+          <h4>Executive Member, CSITAN Pokhara</h4>
+          <div class="m-sub">Student technical community</div>
+          <div class="m-when">2021 — 2022</div>
+          <p>Planned technical events and workshops and led outreach that grew community engagement.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CONTACT ============ -->
+<section class="contact" id="contact">
+  <div class="wrap">
+    <span class="eyebrow" style="justify-content:center">Let's talk</span>
+    <h2>Have something to ship?</h2>
+    <p>I'm open to roles and collaborations across DevOps, cloud, and AI. The fastest way to reach me is email.</p>
+    <div class="contact-links">
+      <a class="clink" href="mailto:kushalsubedi20@gmail.com"><b>email</b>kushalsubedi20@gmail.com</a>
+      <a class="clink" href="https://www.linkedin.com/in/kushal-subedi/" target="_blank" rel="noopener"><b>linkedin</b>/in/kushal-subedi</a>
+      <a class="clink" href="https://github.com/kushalsubedi" target="_blank" rel="noopener"><b>github</b>/kushalsubedi</a>
+      <a class="clink" href="tel:+9779865212350"><b>phone</b>+977 9865212350</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-inner">
+    <span>© 2026 Kushal Subedi</span>
+    <span>Built &amp; deployed on GitHub Pages</span>
+  </div>
+</footer>
 
 <script>
-const terminal = document.getElementById("terminal");
+/* ---------- small terminal widget ---------- */
+(function(){
+  const term = document.getElementById("term");
+  if(!term) return;
 
-const bootLines = [
-  "> booting portfolio...",
-  "> loading profile...",
-  "> initializing dev environment...",
-  "> connecting to github.io...",
-  "> welcome kushal_"
-];
+  const boot = [
+    "> booting kushal.os ...",
+    "> mounting /experience  [ok]",
+    "> loading profile        [ok]",
+    "> type 'help' to explore"
+  ];
 
-let i = 0;
+  const responses = {
+    help: "commands: about · skills · work · projects · contact · clear",
+    about: "Software Engineer focused on cloud-native systems, DevOps, and AI.\nCurrently AI Developer & DevOps at CopilotHQ.",
+    skills: "AWS · Kubernetes · Terraform · Docker · Python · Go · CI/CD · LLMs",
+    work: "CopilotHQ (since Jun 2026) · Leapfrog · The Legalitis · Asarfi\nscroll to #work for the full log",
+    projects: "suSHH · deploya · Stock Prediction Platform · E-commerce",
+    contact: "kushalsubedi20@gmail.com\ngithub.com/kushalsubedi · /in/kushal-subedi"
+  };
 
-function typeBoot() {
-  if (i < bootLines.length) {
-    const line = document.createElement("div");
-    line.className = "line boot";
-    line.textContent = bootLines[i];
-    terminal.appendChild(line);
-    i++;
-    setTimeout(typeBoot, 700);
-  } else {
-    setTimeout(initTerminal, 500);
+  function add(text, cls){
+    const d = document.createElement("div");
+    d.className = "t-line " + (cls||"");
+    d.textContent = text;
+    term.appendChild(d);
+    term.scrollTop = term.scrollHeight;
+    return d;
   }
-}
 
-function initTerminal() {
-  printLine("\nType 'help' to see commands\n");
-
-  const inputLine = document.createElement("div");
-  inputLine.className = "input-line";
-
-  const prompt = document.createElement("span");
-  prompt.className = "prompt";
-  prompt.textContent = "kushal@github:~$";
-
-  const input = document.createElement("input");
-  input.autofocus = true;
-
-  input.addEventListener("keydown", function(e) {
-    if (e.key === "Enter") {
-      handleCommand(input.value);
-      input.value = "";
+  let b = 0;
+  function typeBoot(){
+    if(b < boot.length){
+      add(boot[b], "t-boot");
+      b++;
+      setTimeout(typeBoot, 480);
+    } else {
+      makePrompt();
     }
+  }
+
+  function makePrompt(){
+    const row = document.createElement("div");
+    row.className = "t-in";
+    const p = document.createElement("span");
+    p.className = "t-prompt";
+    p.textContent = "~ $";
+    const inp = document.createElement("input");
+    inp.setAttribute("aria-label","terminal command");
+    inp.spellcheck = false;
+    inp.addEventListener("keydown", function(e){
+      if(e.key === "Enter"){
+        const cmd = inp.value.trim().toLowerCase();
+        inp.disabled = true;
+        p.textContent = "~ $";
+        row.removeChild(inp);
+        const echo = document.createElement("span");
+        echo.className = "t-key";
+        echo.textContent = " " + (inp.value || "");
+        row.appendChild(echo);
+        run(cmd);
+        makePrompt();
+      }
+    });
+    row.appendChild(p);
+    row.appendChild(inp);
+    term.appendChild(row);
+    inp.focus();
+    term.scrollTop = term.scrollHeight;
+  }
+
+  function run(cmd){
+    if(cmd === "") return;
+    if(cmd === "clear"){ term.innerHTML = ""; return; }
+    if(responses[cmd]){ add(responses[cmd], "t-out"); }
+    else { add("command not found: " + cmd + "  (try 'help')", "t-dim"); }
+  }
+
+  term.addEventListener("click", function(){
+    const inp = term.querySelector("input");
+    if(inp) inp.focus();
   });
 
-  inputLine.appendChild(prompt);
-  inputLine.appendChild(input);
-  terminal.appendChild(inputLine);
-}
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if(reduce){ boot.forEach(l=>add(l,"t-boot")); makePrompt(); }
+  else { typeBoot(); }
+})();
 
-function printLine(text, cls="line") {
-  const div = document.createElement("div");
-  div.className = cls;
-  div.textContent = text;
-  terminal.appendChild(div);
-  terminal.scrollTop = terminal.scrollHeight;
-}
-
-function handleCommand(cmd) {
-  printLine(`kushal@github:~$ ${cmd}`, "line dim");
-
-  switch(cmd.trim().toLowerCase()) {
-    case "help":
-      printLine("Available commands:");
-      printLine("  about      - who is kushal");
-      printLine("  skills     - tech stack");
-      printLine("  projects   - show projects");
-      printLine("  contact    - contact info");
-      break;
-
-    case "about":
-      printCard("DevOps Engineer from Nepal.\nFocused on Linux, Docker, CI/CD, AWS, backend systems.");
-      break;
-
-    case "skills":
-      printCard("Python, Go, Docker, AWS, Linux, CI/CD, System Design");
-      break;
-
-    case "projects":
-    <!-- print link as well  -->
-      printCard("suSHH - SSH manager\nCI/CD pipelines\nDevOps lab experiments \pipeline builder 'deploya'");
-      printCard("GitHub: github.com/kushalsubedi/suSHH");
-      printCard("GitHub: github.com/kushalsubedi/deploya");
-     
-      break;
-
-    case "contact":
-      printCard("GitHub: github.com/yourusername\nEmail: kushal@example.com");
-       printCard("GitHub: github.com/kushalsubedi\nLinkedIn: https://www.linkedin.com/in/kushal-subedi/");
-      break;
-
-    case "clear":
-      terminal.innerHTML = "";
-      initTerminal();
-      break;
-
-    default:
-      printLine("Command not found. Type 'help'");
-  }
-}
-
-function printCard(text) {
-  const div = document.createElement("div");
-  div.className = "card";
-  div.textContent = text;
-  terminal.appendChild(div);
-}
-
-typeBoot();
+/* ---------- scroll reveal ---------- */
+(function(){
+  const els = document.querySelectorAll(".reveal");
+  if(!("IntersectionObserver" in window)){ els.forEach(e=>e.classList.add("in")); return; }
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(en=>{
+      if(en.isIntersecting){ en.target.classList.add("in"); io.unobserve(en.target); }
+    });
+  },{threshold:.12});
+  els.forEach(e=>io.observe(e));
+})();
 </script>
 
 </body>
