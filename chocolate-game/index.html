@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Midnight Confectionery</title>
+<meta name="description" content="A dark little game about chocolates, monsters, and the bouquet you leave behind.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍫</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cocoa:#1d110a;
+    --cocoa-deep:#120a05;
+    --cream:#f0e3cf;
+    --cream-dim:#c9b79b;
+    --foil:#d4a052;
+    --foil-dim:rgba(212,160,82,.28);
+    --blood:#b03a30;
+    --kitkat:#c8102e;
+    --dairymilk:#5a3ea6;
+    --roses:#d96a8a;
+    --dark:#7a2f3c;
+    --toffee:#c07f30;
+    --eclair:#9a7336;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{font-size:17px}
+  body{
+    min-height:100vh;
+    background:
+      radial-gradient(120% 90% at 50% -10%, #35200f 0%, var(--cocoa) 45%, var(--cocoa-deep) 100%);
+    color:var(--cream);
+    font-family:"Fraunces", Georgia, serif;
+    font-weight:340;
+    line-height:1.65;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    transition:filter 1.2s ease;
+  }
+  body.gone{filter:saturate(.35) brightness(.75) sepia(.25)}
+  header{
+    width:100%;
+    max-width:40rem;
+    padding:1.4rem 1.2rem .4rem;
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    gap:1rem;
+  }
+  header .mark{
+    font-style:italic;
+    color:var(--foil);
+    font-size:.95rem;
+    letter-spacing:.02em;
+  }
+  header .worth{
+    font-size:.85rem;
+    color:var(--cream-dim);
+    text-align:right;
+  }
+  header .worth b{color:var(--foil);font-weight:600}
+  main{
+    width:100%;
+    max-width:40rem;
+    padding:1.2rem 1.2rem 2rem;
+    flex:1;
+  }
+  h1{
+    font-size:clamp(1.9rem, 6vw, 2.6rem);
+    font-weight:560;
+    font-style:italic;
+    color:var(--foil);
+    line-height:1.15;
+    margin-bottom:.9rem;
+    text-wrap:balance;
+  }
+  .scene p{margin-bottom:1rem;max-width:34rem}
+  .scene p.whisper{
+    font-style:italic;
+    color:var(--cream-dim);
+    font-size:.95rem;
+  }
+  .scene em{color:var(--roses);font-style:italic}
+  .scene .danger{color:var(--blood)}
+  .fade > *{animation:rise .7s ease both}
+  .fade > *:nth-child(2){animation-delay:.12s}
+  .fade > *:nth-child(3){animation-delay:.24s}
+  .fade > *:nth-child(4){animation-delay:.36s}
+  .fade > *:nth-child(5){animation-delay:.48s}
+  @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion: reduce){
+    .fade > *{animation:none}
+    body{transition:none}
+  }
+
+  .choices{margin-top:1.6rem;display:flex;flex-direction:column;gap:.6rem;max-width:34rem}
+  button{
+    font:inherit;
+    color:inherit;
+    cursor:pointer;
+  }
+  .choice{
+    text-align:left;
+    background:transparent;
+    border:1px solid var(--foil-dim);
+    border-radius:.35rem;
+    padding:.75rem 1rem;
+    transition:background .18s ease, border-color .18s ease;
+  }
+  .choice:hover,.choice:focus-visible{
+    background:rgba(212,160,82,.1);
+    border-color:var(--foil);
+    outline:none;
+  }
+  .choice small{display:block;color:var(--cream-dim);font-size:.82rem;font-style:italic}
+
+  /* chocolate chips */
+  .tray{
+    margin-top:1.4rem;
+    display:flex;
+    flex-wrap:wrap;
+    gap:.55rem;
+    max-width:34rem;
+  }
+  .chip{
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:.1rem;
+    background:rgba(0,0,0,.35);
+    border:1px solid var(--foil-dim);
+    border-left:.45rem solid var(--wrap, var(--foil));
+    border-radius:.4rem;
+    padding:.5rem 3.4rem .55rem .8rem;
+    min-width:9.2rem;
+    transition:transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+  }
+  .chip b{font-weight:560;font-size:.98rem}
+  .chip span{font-size:.78rem;color:var(--cream-dim);font-style:italic}
+  .chip .pts{
+    position:absolute;top:.45rem;right:.6rem;
+    font-size:.75rem;color:var(--foil);font-style:normal;
+  }
+  .chip.selectable:hover,.chip.selectable:focus-visible{
+    transform:translateY(-2px);
+    border-color:var(--foil);
+    outline:none;
+  }
+  .chip.selected{
+    border-color:var(--foil);
+    box-shadow:0 0 0 1px var(--foil), 0 6px 18px rgba(0,0,0,.5);
+    transform:translateY(-2px);
+  }
+  .tray-actions{margin-top:1rem;display:flex;gap:.6rem;flex-wrap:wrap}
+  .act{
+    background:var(--foil);
+    color:var(--cocoa-deep);
+    border:none;
+    border-radius:.35rem;
+    padding:.6rem 1.2rem;
+    font-weight:600;
+  }
+  .act:disabled{opacity:.35;cursor:default}
+  .act.ghost{background:transparent;color:var(--cream-dim);border:1px solid var(--foil-dim);font-weight:400}
+  .act.ghost:hover{color:var(--cream)}
+
+  /* riddle */
+  .riddle-box{margin-top:1.3rem;display:flex;gap:.6rem;max-width:34rem}
+  .riddle-box input{
+    flex:1;
+    font:inherit;
+    background:rgba(0,0,0,.35);
+    border:1px solid var(--foil-dim);
+    border-radius:.35rem;
+    color:var(--cream);
+    padding:.6rem .9rem;
+  }
+  .riddle-box input:focus-visible{outline:none;border-color:var(--foil)}
+
+  /* bouquet */
+  .bouquet{
+    margin:1.8rem auto 0;
+    max-width:30rem;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  .stems{
+    display:flex;
+    justify-content:center;
+    align-items:flex-end;
+    min-height:7.5rem;
+  }
+  .stem{
+    width:6.4rem;
+    padding:.55rem .5rem 1.05rem;
+    text-align:center;
+    background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(0,0,0,.25));
+    border:1px solid var(--foil-dim);
+    border-top:.4rem solid var(--wrap, var(--foil));
+    border-radius:3rem 3rem .5rem .5rem;
+    margin:0 -.45rem;
+    transform:rotate(var(--tilt)) translateY(var(--lift));
+    font-size:.74rem;
+    line-height:1.25;
+  }
+  .stem b{display:block;font-size:.82rem;font-weight:560}
+  .stem i{color:var(--foil);font-style:normal}
+  .wrapcone{
+    width:11rem;height:3.6rem;
+    margin-top:.2rem;
+    align-items:flex-start;
+    padding-top:.5rem;
+    background:linear-gradient(180deg,#3a2413,#241408);
+    border:1px solid var(--foil-dim);
+    clip-path:polygon(0 0, 100% 0, 62% 100%, 38% 100%);
+    display:flex;align-items:center;justify-content:center;
+    color:var(--foil);font-style:italic;font-size:.8rem;
+  }
+  .empty-bouquet{color:var(--cream-dim);font-style:italic;text-align:center;margin-top:1.4rem}
+  .tally{
+    margin-top:1.6rem;text-align:center;
+  }
+  .tally .num{font-size:2.2rem;color:var(--foil);font-weight:600;font-style:italic}
+  .tally .grade{color:var(--cream-dim);font-style:italic}
+  .tally .best{font-size:.8rem;color:var(--cream-dim);margin-top:.4rem}
+
+  footer{
+    width:100%;max-width:40rem;
+    padding:0 1.2rem 1.6rem;
+    font-size:.78rem;color:rgba(201,183,155,.55);
+    font-style:italic;
+    display:flex;justify-content:space-between;gap:1rem;
+  }
+  footer a{color:inherit}
+  @media (max-width:480px){
+    html{font-size:15.5px}
+    .chip{min-width:100%}
+    .stem{width:5.6rem}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="mark">The Midnight Confectionery</div>
+  <div class="worth" id="worth"></div>
+</header>
+<main id="stage" aria-live="polite"></main>
+<footer>
+  <span>a small dark game</span>
+  <a href="/">kushalsubedi.github.io</a>
+</footer>
+
+<script>
+"use strict";
+
+/* ---------- data ---------- */
+
+const ITEMS = {
+  kitkat:    { name:"KitKat",       pts:20, wrap:"var(--kitkat)",    desc:"Four fingers of wafer. Something in it wants to snap." },
+  dairymilk: { name:"Dairy Milk",   pts:15, wrap:"var(--dairymilk)", desc:"A glass and a half of someone's childhood." },
+  roses:     { name:"Cadbury Roses",pts:25, wrap:"var(--roses)",     desc:"The ones you give when words fail." },
+  dark:      { name:"Bournville 85%",pts:30,wrap:"var(--dark)",      desc:"Bitter enough to be honest." },
+  toffee:    { name:"Old Toffee",   pts:10, wrap:"var(--toffee)",    desc:"It remembers being molten. It wants to hold on." },
+  eclair:    { name:"Cadbury Eclair",pts:12,wrap:"var(--eclair)",    desc:"A hard shell around a secret caramel heart." },
+  /* craftables */
+  caramelheart:{ name:"Caramel Heart",pts:30, wrap:"var(--toffee)",  desc:"Molten and loyal. It sticks to everything it loves.", crafted:true },
+  bitterlance: { name:"Bitter Lance", pts:55, wrap:"var(--dark)",    desc:"Wafer spine, black blood. The only blade down here.", crafted:true },
+  velvetrose:  { name:"Velvet Rose",  pts:50, wrap:"var(--roses)",   desc:"Milk-soft petals. Too beautiful to eat.", crafted:true },
+};
+
+const MIXES = {
+  "dairymilk+toffee": "caramelheart",
+  "dark+kitkat":      "bitterlance",
+  "dairymilk+roses":  "velvetrose",
+};
+
+const HALL_POOL   = ["kitkat","dairymilk","roses"];
+const CELLAR_POOL = ["dark","toffee","eclair"];
+
+/* ---------- state ---------- */
+
+let S;
+function reset(){
+  S = { inv:[], taken:new Set(), flags:{}, grace:0, wounds:0 };
+  go("intro");
+}
+const has = id => S.inv.includes(id);
+const lose = id => { const i=S.inv.indexOf(id); if(i>-1) S.inv.splice(i,1); };
+const gain = id => { S.inv.push(id); S.taken.add(id); };
+const score = () => S.inv.reduce((s,i)=>s+ITEMS[i].pts,0) + S.grace - S.wounds;
+const mixKey = (a,b) => [a,b].sort().join("+");
+
+/* ---------- rendering helpers ---------- */
+
+const stage = document.getElementById("stage");
+const worthEl = document.getElementById("worth");
+const esc = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;");
+
+function updateWorth(){
+  worthEl.innerHTML = S.inv.length
+    ? `bouquet so far — <b>${score()} pts</b>, ${S.inv.length} sweet${S.inv.length>1?"s":""}`
+    : `your hands are empty`;
+}
+
+function paras(arr){ return arr.map(t=>`<p${t.startsWith("~")?' class="whisper"':""}>${t.replace(/^~/,"")}</p>`).join(""); }
+
+function render(title, textArr, extraHTML=""){
+  updateWorth();
+  stage.innerHTML = `<div class="scene fade"><h1>${title}</h1>${paras(textArr)}${extraHTML}</div>`;
+  window.scrollTo({top:0});
+}
+
+function choices(list){
+  return `<div class="choices">` + list.map((c,i)=>
+    `<button class="choice" data-c="${i}">${c.label}${c.sub?`<small>${c.sub}</small>`:""}</button>`
+  ).join("") + `</div>`;
+}
+function bindChoices(list){
+  stage.querySelectorAll("[data-c]").forEach(btn=>{
+    btn.addEventListener("click", ()=> list[+btn.dataset.c].act());
+  });
+}
+
+function chipHTML(id, selectable){
+  const it = ITEMS[id];
+  return `<button class="chip ${selectable?"selectable":""}" data-id="${id}" style="--wrap:${it.wrap}">
+    <b>${it.name}</b><span>${it.desc}</span><span class="pts">${it.pts} pts</span>
+  </button>`;
+}
+
+/* generic picker: choose up to n items from pool, then cont(pickedIds) */
+function picker(pool, n, verb, cont, skipLabel){
+  const sel = new Set();
+  const trayHTML = `<div class="tray">${pool.map(id=>chipHTML(id,true)).join("")}</div>
+    <div class="tray-actions">
+      <button class="act" id="confirm" disabled>${verb}</button>
+      ${skipLabel?`<button class="act ghost" id="skip">${skipLabel}</button>`:""}
+    </div>`;
+  return { html:trayHTML, bind(){
+    const confirm = stage.querySelector("#confirm");
+    stage.querySelectorAll(".chip").forEach(ch=>{
+      ch.addEventListener("click", ()=>{
+        const id = ch.dataset.id;
+        if(sel.has(id)){ sel.delete(id); ch.classList.remove("selected"); }
+        else if(sel.size < n){ sel.add(id); ch.classList.add("selected"); }
+        confirm.disabled = sel.size===0;
+        confirm.textContent = `${verb}${sel.size>1?` (${sel.size})`:""}`;
+      });
+    });
+    confirm.addEventListener("click", ()=> cont([...sel]));
+    const skip = stage.querySelector("#skip");
+    if(skip) skip.addEventListener("click", ()=> cont([]));
+  }};
+}
+
+/* ---------- fights ----------
+   outcomes: map itemId -> {type:'kill'|'escape'|'death', text, consume?, wound?}
+   two selected chips are mixed first; unknown mix = sludge (lose both, one more chance) */
+
+function fight(cfg){
+  render(cfg.title, cfg.text,
+    `<p class="whisper">Offer it one thing — or select two and mix them.</p>
+     <div class="tray">${S.inv.map(id=>chipHTML(id,true)).join("")}</div>
+     <div class="tray-actions"><button class="act" id="offer" disabled>Offer</button></div>`);
+
+  const sel = new Set();
+  const offer = stage.querySelector("#offer");
+  stage.querySelectorAll(".chip").forEach(ch=>{
+    ch.addEventListener("click", ()=>{
+      const id = ch.dataset.id;
+      if(sel.has(id)){ sel.delete(id); ch.classList.remove("selected"); }
+      else if(sel.size<2){ sel.add(id); ch.classList.add("selected"); }
+      offer.disabled = sel.size===0;
+      offer.textContent = sel.size===2 ? "Mix & offer" : "Offer";
+    });
+  });
+
+  offer.addEventListener("click", ()=>{
+    let used = [...sel];
+    let itemId;
+    if(used.length===2){
+      const result = MIXES[mixKey(used[0],used[1])];
+      if(result){
+        used.forEach(lose);
+        gain(result);
+        itemId = result;
+      } else {
+        used.forEach(lose);
+        if(S.inv.length===0) return die(cfg.title,
+          ["You press the two sweets together. They refuse each other — a grey, weeping sludge runs through your fingers.",
+           "Your hands are empty now. "+cfg.sludgeDeath]);
+        return fightInterlude(cfg,
+          ["You press the two sweets together. They refuse each other — a grey, weeping sludge runs through your fingers.",
+           "~"+cfg.sludgeTaunt]);
+      }
+    } else {
+      itemId = used[0];
+    }
+    resolve(cfg, itemId);
+  });
+}
+
+function fightInterlude(cfg, text){
+  render(cfg.title, text, choices([{label:"Steady your hands and choose again.", act:()=>fight(cfg)}]));
+  bindChoices([{act:()=>fight(cfg)}]);
+}
+
+function resolve(cfg, itemId){
+  const out = cfg.outcomes[itemId] || cfg.fallback;
+  if(out.consume !== false) lose(itemId);
+  if(out.wound) S.wounds += out.wound;
+  if(out.type==="death") return die(cfg.title, out.text);
+  render(cfg.title, out.text, choices([{label:out.next.label, act:out.next.act}]));
+  bindChoices([{act:out.next.act}]);
+}
+
+/* ---------- endings ---------- */
+
+function bouquetHTML(caption){
+  if(S.inv.length===0) return `<p class="empty-bouquet">There is no bouquet. Only the wrapper of the night, folded around nothing.</p>`;
+  const n = S.inv.length;
+  const stems = S.inv.map((id,i)=>{
+    const it = ITEMS[id];
+    const tilt = (i-(n-1)/2)*9;
+    const lift = Math.abs(i-(n-1)/2)*9;
+    return `<div class="stem" style="--wrap:${it.wrap};--tilt:${tilt}deg;--lift:${lift}px"><b>${it.name}</b><i>${it.pts} pts</i></div>`;
+  }).join("");
+  return `<div class="bouquet"><div class="stems">${stems}</div><div class="wrapcone">${caption}</div></div>`;
+}
+
+function grade(p){
+  if(p>=120) return "A bouquet worth dying for. You nearly did.";
+  if(p>=80)  return "A magnificent bouquet.";
+  if(p>=45)  return "A modest, honest bouquet.";
+  if(p>0)    return "A small bouquet. Small things are still things.";
+  return "Nothing but the walk itself.";
+}
+
+function tallyHTML(label){
+  const p = score();
+  const best = +(localStorage.getItem("confectionery-best")||0);
+  if(p>best) localStorage.setItem("confectionery-best", p);
+  return `<div class="tally">
+    <div class="num">${p} pts</div>
+    <div class="grade">${grade(p)}</div>
+    ${best>0?`<div class="best">best walk so far: ${Math.max(best,p)} pts</div>`:""}
+  </div>
+  <div class="tray-actions" style="justify-content:center;margin-top:1.6rem">
+    <button class="act" id="again">${label}</button>
+  </div>`;
+}
+
+function die(where, text){
+  document.body.classList.add("gone");
+  const t = Array.isArray(text)?text:[text];
+  render("You are gone.", [
+    ...t,
+    "The Confectionery folds itself around the place where you were standing, and is quiet.",
+    "~But something else remains. In the morning — there is always, eventually, a morning — someone walking the path finds what you were carrying, laid out as if arranged on purpose:"
+  ], bouquetHTML("left behind") + tallyHTML("Walk again"));
+  stage.querySelector("#again").addEventListener("click", ()=>{
+    document.body.classList.remove("gone");
+    reset();
+  });
+}
+
+function ending(kind){
+  if(kind==="lance"){
+    render("The Last Counter", [
+      "Behind where he stood there is no door. There is a small garden under a sugar-paper moon, and in the garden, a small white stone.",
+      "You kneel to lay the bouquet down, and read the name on the stone.",
+      "<em>It is yours.</em>",
+      "~The Midnight Confectionery is where the gone ones come to build their own goodbyes. You did yours beautifully.",
+    ], bouquetHTML("laid on the stone") + tallyHTML("Walk again"));
+  } else if(kind==="child"){
+    S.grace += 25;
+    render("The Hollow Child", [
+      "You stand still, empty-handed of weapons, and the Confectioner raises the ladle — and stops.",
+      "The Hollow Child is standing between you. It holds up the chocolate you gave it, unwrapped, unbitten. Kept.",
+      "<em>\"This one shares,\"</em> the child says, and the Confectioner lowers his arm the way shops lower their shutters, and the whole house sighs and lets you through.",
+      "The garden. The sugar-paper moon. The small white stone with your name on it. You lay the bouquet down anyway — some goodbyes you give yourself.",
+      "~Kindness, it turns out, is the rarest ingredient. +25 pts of grace.",
+    ], bouquetHTML("laid on the stone") + tallyHTML("Walk again"));
+  }
+  stage.querySelector("#again").addEventListener("click", reset);
+}
+
+/* ---------- scenes ---------- */
+
+const SCENES = {
+
+intro(){
+  render("The Midnight Confectionery", [
+    "You wake standing up, which is never a good sign, in a shop that is closed, which is worse.",
+    "Shelves rise into the dark like church balconies. Every one of them holds chocolate — foil throwing back a light that has no source.",
+    "On the counter, a card in careful handwriting: <em>\"Build a bouquet for the one who waits at the end. Choose sweetly. Not everything here is food. Some of it is ammunition.\"</em>",
+    "~Somewhere deeper in the shop, something licks its lips.",
+  ], choices(C.intro));
+  bindChoices(C.intro);
+},
+
+doors(){
+  render("Two Doors", [
+    "Past the counter, the shop splits. Two doors, both ajar.",
+    "The left one breathes <em>warm air</em> — milk, caramel, a smell like being eight years old and forgiven for something.",
+    "The right one weeps <em>cold air</em> — rain on tin, dark cocoa, the smell of a conversation you've been avoiding.",
+    "~The door you pick says something about you. The Confectionery is listening.",
+  ], choices(C.doors));
+  bindChoices(C.doors);
+},
+
+hall(){
+  const pool = HALL_POOL.filter(id=>!S.taken.has(id));
+  const p = picker(pool, 2, "Take", picked=>{ picked.forEach(gain); go("vendor"); });
+  render("The Foil Hall", [
+    "Warm light, gold on every surface. The shelves here hold the comfortable ones — the chocolates of birthdays and apologies.",
+    "A brass plaque: <em>\"TWO. The hall counts.\"</em>",
+    "~You may carry two. What you leave behind, you leave behind.",
+  ], p.html);
+  p.bind();
+},
+
+cellar(){
+  const pool = CELLAR_POOL.filter(id=>!S.taken.has(id));
+  const p = picker(pool, 2, "Take", picked=>{ picked.forEach(gain); go("vendor"); });
+  render("The Cellar", [
+    "Cold steps down into shelf after shelf of the serious ones — the bitter bars, the hard sweets, the chocolates adults eat alone.",
+    "Chalk on the wall: <em>\"TWO. The cellar counts.\"</em>",
+    "~You may carry two. What you leave behind, you leave behind.",
+  ], p.html);
+  p.bind();
+},
+
+vendor(){
+  render("The Counter of Small Mercies", [
+    "A hatch in the wall slides open. Behind it, a vendor whose face is a crumpled wrapper smoothes itself into something like a smile.",
+    "<em>\"One sweet from the other room, traveller. Free of charge — if you can answer freely.\"</em>",
+    "The wrapper-face leans close and recites:",
+    "<em>\"I am picked but I am no fruit. I am given when the tongue goes coward. In this house I outprice blades, and in every house I outlive the giver. Name me.\"</em>",
+  ], `<div class="riddle-box"><input id="ans" autocomplete="off" placeholder="speak your answer" aria-label="riddle answer"><button class="act" id="say">Say it</button></div>`);
+  const input = stage.querySelector("#ans");
+  const say = ()=>{
+    const a = input.value.trim().toLowerCase();
+    if(/\brose(s)?\b/.test(a)) go("vendorWin");
+    else {
+      render("The Counter of Small Mercies", [
+        `<span class="danger">"No,"</span> says the wrapper-face, folding itself back into a crumple. <em>"A rose, traveller. It was a rose. It is always a rose."</em>`,
+        "The hatch slides shut. The mercy was small, and now it is gone.",
+      ], choices(C.onward));
+      bindChoices(C.onward);
+    }
+  };
+  stage.querySelector("#say").addEventListener("click", say);
+  input.addEventListener("keydown", e=>{ if(e.key==="Enter") say(); });
+  input.focus();
+},
+
+vendorWin(){
+  const other = (S.flags.door==="hall" ? CELLAR_POOL : HALL_POOL).filter(id=>!S.taken.has(id));
+  const p = picker(other, 1, "Take", picked=>{ picked.forEach(gain); go("wraith"); }, "Take nothing");
+  render("The Counter of Small Mercies", [
+    "<em>\"A rose,\"</em> the vendor sighs, delighted. <em>\"It is always a rose.\"</em>",
+    "The hatch opens wider. Inside: the shelves of the room you didn't choose.",
+    "~One. The hatch counts.",
+  ], p.html);
+  p.bind();
+},
+
+wraith(){
+  fight({
+    title:"The Sugar Wraith",
+    text:[
+      "The corridor narrows and goes white — not clean white, <em>icing</em> white. The air tastes of a hundred birthdays at once.",
+      "It unfolds from the ceiling: a long translucent thing made of spun sugar and want. Where a face should be there is only a mouth, and the mouth says, politely, <span class='danger'>\"sweet?\"</span>",
+      "~It feeds on sweetness. Think about what that means before you reach into your pocket.",
+    ],
+    sludgeTaunt:`"sweet?" the Wraith asks again, less politely.`,
+    sludgeDeath:"The Wraith does not ask a third time.",
+    outcomes:{
+      dark:{ type:"kill", consume:false,
+        text:[
+          "You hold out the Bournville. The Wraith wraps itself around the bar and drinks — and shudders. Bitterness runs through it like ink through water.",
+          "<em>\"oh,\"</em> it says, surprised to be honest for once, and dissolves into a fine rain of sugar that never reaches the floor.",
+          "The bar is paler now, but whole. It only sipped.",
+        ],
+        next:{ label:"Walk on through the falling sugar.", act:()=>go("spill") } },
+      bitterlance:{ type:"kill",
+        text:[
+          "You marry the snap and the bitter right there in the white corridor, and drive the Bitter Lance through the mouth mid-question.",
+          "The Wraith comes apart like candy floss in rain. The Lance goes with it — a blade that fine only works once.",
+          "~You have spent something early. The house keeps accounts.",
+        ],
+        next:{ label:"Walk on through the falling sugar.", act:()=>go("spill") } },
+      roses:{ type:"escape",
+        text:[
+          "You don't feed it. You <em>show</em> it — the Roses, foil petals catching the sourceless light.",
+          "The Wraith has never been given anything it wasn't about to eat. It hesitates, reaches, cradles the box like something it almost remembers.",
+          "You run. Behind you, very quietly, the mouth is not eating. It is weeping.",
+          "~The Roses are gone. Some prices are strange.",
+        ],
+        next:{ label:"Keep running.", act:()=>go("spill") } },
+    },
+    fallback:{ type:"death",
+      text:[
+        "You offer it sweetness. For one warm second the Wraith glows like a lit window — and then it grows a second mouth, because one is no longer enough, and the second mouth is for you.",
+      ] },
+  });
+},
+
+spill(){
+  const pool = Object.keys(ITEMS).filter(id=>!ITEMS[id].crafted && !S.taken.has(id));
+  if(pool.length===0) return go("child");
+  const p = picker(pool, 2, "Gather", picked=>{ picked.forEach(gain); go("child"); }, "Leave them");
+  render("The Spill", [
+    "Someone came this way before you and did not make it. A delivery tray lies overturned, its cargo scattered across the tiles like dropped jewellery.",
+    "~Take up to two. The dead don't mind. That's the worst thing about them.",
+  ], p.html);
+  p.bind();
+},
+
+child(){
+  if(S.inv.length===0) return go("maw");
+  render("The Hollow Child", [
+    "At the foot of the stairs sits a child made of empty wrappers, holding its knees. Where its chest should be, there is just folded foil and a draught.",
+    "It doesn't ask. It just watches your pockets the way the hungry watch windows.",
+    "~Everything here wants to eat you. This is the only thing that's merely hungry.",
+  ], choices(C.child()));
+  bindChoices(C.child());
+},
+
+childGive(){
+  const p = picker(S.inv, 1, "Give", picked=>{
+    const it = ITEMS[picked[0]];
+    lose(picked[0]);
+    S.flags.child = true;
+    render("The Hollow Child", [
+      `You hold out the ${it.name}. The child takes it with both paper hands and does not eat it — it <em>holds</em> it, against the draught where its heart should be, and the foil of its chest stops rattling.`,
+      "<em>\"This one shares,\"</em> it whispers, to no one you can see.",
+      "~You are lighter by one sweet and heavier by something else.",
+    ], choices(C.onwardMaw));
+    bindChoices(C.onwardMaw);
+  });
+  render("The Hollow Child", [
+    "You crouch down. The wrapper-face tilts up.",
+    "~Choose what you can bear to lose.",
+  ], p.html);
+  p.bind();
+},
+
+maw(){
+  fight({
+    title:"The Maw",
+    text:[
+      "The stairs end at a kitchen, and the kitchen is a throat. The floor slopes inward to a drain of teeth — rows of them, molar-round and patient — and the whole room swallows, slowly, once.",
+      "There is no walking around it. There is only the long sloping walk <em>across</em> it, and the teeth are starting to pay attention.",
+      "~It cannot be fought. It can only be fed, jammed, or outwitted. Sticky things hold. Milk things melt. Think.",
+    ],
+    sludgeTaunt:"The floor swallows again, closer this time.",
+    sludgeDeath:"The floor swallows a third time, and you are standing in the middle of it.",
+    outcomes:{
+      caramelheart:{ type:"kill",
+        text:[
+          "You throw the Caramel Heart into the drain of teeth. It lands molten-side down and does what caramel does: it <em>holds on</em>.",
+          "The Maw bites down and cannot open. It grinds, panics, seals itself shut around the one thing in the world that loves too hard to let go.",
+          "You walk across the locked teeth like a bridge.",
+        ],
+        next:{ label:"Cross the quiet teeth.", act:()=>go("confectioner") } },
+      eclair:{ type:"escape",
+        text:[
+          "You roll the Eclair down the slope. The Maw takes it — hard shell, secret heart — and begins to chew. And chew. And <em>chew</em>.",
+          "An Eclair is a long argument. You cross the room while the teeth are busy losing it.",
+        ],
+        next:{ label:"Slip past while it chews.", act:()=>go("confectioner") } },
+      toffee:{ type:"escape", wound:15,
+        text:[
+          "You wedge the Old Toffee between the two biggest teeth. It holds — toffee always holds — but only on one side.",
+          "You run the gauntlet of the other side. A tooth catches your ankle on the way out, just to say it could have.",
+          "~You are through, and bleeding sweetness. −15 pts.",
+        ],
+        next:{ label:"Limp onward.", act:()=>go("confectioner") } },
+      bitterlance:{ type:"escape",
+        text:[
+          "You drive the Bitter Lance down between the two biggest teeth and lean on it. The Maw strains, gags on bitterness, and holds — barely.",
+          "You cross on the flat of the blade. Behind you it snaps. A blade that fine only works once.",
+        ],
+        next:{ label:"Cross the jammed teeth.", act:()=>go("confectioner") } },
+      dairymilk:{ type:"death",
+        text:[
+          "You offer the Dairy Milk. It melts the moment it touches the warm floor — a glass and a half poured straight down a throat.",
+          "The Maw remembers, now, how much it likes milk. And you are the only other soft thing in the room.",
+        ] },
+    },
+    fallback:{ type:"death",
+      text:[
+        "The teeth consider your offering for exactly as long as it takes to realise you are the better one.",
+      ] },
+  });
+},
+
+confectioner(){
+  render("The Confectioner", [
+    "The last room is the workshop, and the workshop was never empty. He has been here the whole time, stirring a copper pot of something dark: a tall figure in an apron of pressed foil, with a face like a mould that nothing was ever poured into.",
+    "<em>\"Every bouquet needs wrapping,\"</em> he says, not unkindly, lifting a ladle of boiling chocolate. <em>\"Hold still.\"</em>",
+    "Then he pauses, because tradition is tradition, and offers you the courtesy of the house — one riddle:",
+    "<em>\"Two sisters sleep in silver foil. One snaps like winter branches. One bleeds black and bitter. Married, they make the only blade I fear. Name the sisters.\"</em>",
+  ], `<div class="riddle-box"><input id="ans" autocomplete="off" placeholder="name the sisters" aria-label="riddle answer"><button class="act" id="say">Answer</button></div>
+      <div class="tray-actions"><button class="act ghost" id="refuse">Refuse the riddle</button></div>`);
+  const input = stage.querySelector("#ans");
+  const finish = (knows)=>{
+    S.flags.hint = knows;
+    go("confectionerFight");
+  };
+  const say = ()=>{
+    const a = input.value.trim().toLowerCase();
+    const right = /kat|wafer|snap/.test(a) && /dark|bourn|bitter/.test(a);
+    if(right){
+      render("The Confectioner", [
+        "The mould-face goes very still.",
+        "<em>\"Yes,\"</em> he says softly. <em>\"The snap and the bitter. Married on the tongue. I had hoped you didn't know.\"</em>",
+        "He raises the ladle anyway. Tradition is tradition.",
+      ], choices([{label:"Face him.", act:()=>finish(true)}]));
+      bindChoices([{act:()=>finish(true)}]);
+    } else {
+      render("The Confectioner", [
+        `<span class="danger">"No,"</span> he says, almost sorry, and does not tell you the answer, because the answer is the only thing keeping him alive.`,
+      ], choices([{label:"Face him anyway.", act:()=>finish(false)}]));
+      bindChoices([{act:()=>finish(false)}]);
+    }
+  };
+  stage.querySelector("#say").addEventListener("click", say);
+  input.addEventListener("keydown", e=>{ if(e.key==="Enter") say(); });
+  stage.querySelector("#refuse").addEventListener("click", ()=>finish(false));
+  input.focus();
+},
+
+confectionerFight(){
+  const opts = [];
+  if(S.inv.length>0) opts.push({label:"Reach into the bouquet.", sub:"Offer him one sweet — or mix two.", act:()=>SCENES._confFight()});
+  if(S.flags.child) opts.push({label:"Stand still, empty-handed.", sub:"The way the card said. Choose sweetly.", act:()=>ending("child")});
+  if(opts.length===0) return die("The Confectioner", [
+    "You have nothing left to offer and no one left to owe you kindness. The ladle tips.",
+    "Boiling chocolate is the gentlest of all the deaths in this house. That is the nicest thing anyone can say about it.",
+  ]);
+  render("The Confectioner", [
+    "He crosses the workshop the way closing time crosses a shop — slowly, totally, with nothing personal about it.",
+    S.flags.hint
+      ? "~The snap and the bitter. Married on the tongue. You know what to build."
+      : "~He fears one blade. You were not told which. The ladle is rising.",
+  ], choices(opts));
+  bindChoices(opts);
+},
+
+_confFight(){
+  fight({
+    title:"The Confectioner",
+    text:[
+      "The ladle hangs above you like a verdict. Whatever you are going to make, make it now.",
+      S.flags.hint ? "~Two sisters. One snaps. One bleeds bitter. Marry them." : "~Choose. The chocolate is boiling.",
+    ],
+    sludgeTaunt:"The Confectioner watches the sludge run through your fingers and shakes his head, a craftsman grieving bad work.",
+    sludgeDeath:"He almost looks disappointed as the ladle tips.",
+    outcomes:{
+      bitterlance:{ type:"kill", consume:false,
+        text:[
+          "You marry the snap and the bitter under the raised ladle, and the Bitter Lance goes in without a sound.",
+          "The Confectioner comes apart the way a box of chocolates does when it is finally opened — lid, ribbon, a soft exhale of cocoa dust.",
+        ],
+        next:{ label:"Step over the ribbon.", act:()=>ending("lance") } },
+    },
+    fallback:{ type:"death",
+      text:[
+        "He accepts your offering with real courtesy, sets it gently on the workbench — he is, after all, a professional — and then the ladle tips.",
+        "The last thing you taste is his life's work. It is, you have to admit, exceptional.",
+      ] },
+  });
+},
+
+bench(){
+  if(S.inv.length<2){
+    render("The Abandoned Workbench", [
+      "A marble slab, a palette knife, a ring of dried chocolate like an old coffee stain. Whoever worked here left mid-thought.",
+      "~You'd need two sweets to marry two sweets. You don't have them.",
+    ], choices([C.onwardMaw[0]]));
+    bindChoices([C.onwardMaw[0]]);
+    return;
+  }
+  const p = picker(S.inv, 2, "Mix", picked=>{
+    if(picked.length<2){ go("bench"); return; }
+    const result = MIXES[mixKey(picked[0],picked[1])];
+    if(result){
+      picked.forEach(lose);
+      gain(result);
+      const it = ITEMS[result];
+      render("The Abandoned Workbench", [
+        `The two sweets take to each other at once, the way some things were always going to. On the marble before you lies a <em>${it.name}</em>.`,
+        `~${it.desc} (${it.pts} pts)`,
+      ], choices(C.benchAfter));
+      bindChoices(C.benchAfter);
+    } else {
+      render("The Abandoned Workbench", [
+        "You warm them together on the marble. They refuse each other — politely, the way strangers do — and set back into their own shapes, unharmed.",
+        "~Not every marriage takes. Here, at least, refusal costs nothing.",
+      ], choices(C.benchAfter));
+      bindChoices(C.benchAfter);
+    }
+  }, "Leave the bench");
+  render("The Abandoned Workbench", [
+    "A marble slab, a palette knife, a ring of dried chocolate like an old coffee stain. Whoever worked here left mid-thought.",
+    "A note under the knife: <em>\"Some sweets are only half of something. — C.\"</em>",
+    "~Choose two. The marble is patient; the house is not. Mix what you like, then go.",
+  ], p.html);
+  p.bind();
+},
+
+};
+
+/* ---------- choice tables ---------- */
+
+const C = {
+  intro:[
+    { label:"Pick up the card and walk toward the licking sound.", sub:"There is no bell on the door behind you. There is no door behind you.", act:()=>go("doors") },
+  ],
+  doors:[
+    { label:"The warm door.", sub:"Milk, caramel, forgiveness.", act:()=>{ S.flags.door="hall"; go("hall"); } },
+    { label:"The cold door.", sub:"Rain, dark cocoa, the avoided conversation.", act:()=>{ S.flags.door="cellar"; go("cellar"); } },
+  ],
+  onward:[
+    { label:"Walk deeper into the shop.", act:()=>go("wraith") },
+  ],
+  onwardMaw:[
+    { label:"Go down the last stairs.", act:()=>go("maw") },
+    { label:"Stop at the abandoned workbench.", sub:"A marble slab for marrying sweets. Mix before you descend.", act:()=>go("bench") },
+  ],
+  benchAfter:[
+    { label:"Mix again.", act:()=>go("bench") },
+    { label:"Go down the last stairs.", act:()=>go("maw") },
+  ],
+  child: ()=>[
+    { label:"Give it a chocolate.", sub:"You choose which. It costs what it costs.", act:()=>go("childGive") },
+    { label:"Keep everything and walk past.", sub:"The bouquet is for the one who waits. Isn't it?", act:()=>{
+        render("The Hollow Child", [
+          "You step around it. It doesn't cry — crying needs a chest — but the wrappers rustle once, like a held breath let go.",
+          "~You keep every point you own. You notice the word <em>own</em> doing a lot of work.",
+        ], choices(C.onwardMaw));
+        bindChoices(C.onwardMaw);
+      } },
+  ],
+};
+
+function go(id){ SCENES[id](); }
+
+reset();
+</script>
+</body>
+</html>
