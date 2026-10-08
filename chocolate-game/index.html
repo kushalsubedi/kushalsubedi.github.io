@@ -168,19 +168,6 @@
   .act.ghost{background:transparent;color:var(--cream-dim);border:1px solid var(--foil-dim);font-weight:400}
   .act.ghost:hover{color:var(--cream)}
 
-  /* riddle */
-  .riddle-box{margin-top:1.3rem;display:flex;gap:.6rem;max-width:34rem}
-  .riddle-box input{
-    flex:1;
-    font:inherit;
-    background:rgba(0,0,0,.35);
-    border:1px solid var(--foil-dim);
-    border-radius:.35rem;
-    color:var(--cream);
-    padding:.6rem .9rem;
-  }
-  .riddle-box input:focus-visible{outline:none;border-color:var(--foil)}
-
   /* bouquet */
   .bouquet{
     margin:1.8rem auto 0;
@@ -540,24 +527,17 @@ vendor(){
   render("The Counter of Small Mercies", [
     "A hatch in the wall slides open. Behind it, a vendor whose face is a crumpled wrapper smoothes itself into something like a smile.",
     "<em>\"One sweet from the other room, traveller. Free of charge — if you can answer freely.\"</em>",
-    "The wrapper-face leans close and recites:",
-    "<em>\"I am picked but I am no fruit. I am given when the tongue goes coward. In this house I outprice blades, and in every house I outlive the giver. Name me.\"</em>",
-  ], `<div class="riddle-box"><input id="ans" autocomplete="off" placeholder="speak your answer" aria-label="riddle answer"><button class="act" id="say">Say it</button></div>`);
-  const input = stage.querySelector("#ans");
-  const say = ()=>{
-    const a = input.value.trim().toLowerCase();
-    if(/\brose(s)?\b/.test(a)) go("vendorWin");
-    else {
-      render("The Counter of Small Mercies", [
-        `<span class="danger">"No,"</span> says the wrapper-face, folding itself back into a crumple. <em>"A rose, traveller. It was a rose. It is always a rose."</em>`,
-        "The hatch slides shut. The mercy was small, and now it is gone.",
-      ], choices(C.onward));
-      bindChoices(C.onward);
-    }
-  };
-  stage.querySelector("#say").addEventListener("click", say);
-  input.addEventListener("keydown", e=>{ if(e.key==="Enter") say(); });
-  input.focus();
+    "The wrapper-face leans close: <em>\"I am given when the tongue goes coward, and I outlive the giver. What am I?\"</em>",
+  ], choices(C.vendorRiddle));
+  bindChoices(C.vendorRiddle);
+},
+
+vendorFail(){
+  render("The Counter of Small Mercies", [
+    `<span class="danger">"No,"</span> says the wrapper-face, folding itself back into a crumple. <em>"A rose, traveller. It was a rose. It is always a rose."</em>`,
+    "The hatch slides shut. The mercy was small, and now it is gone.",
+  ], choices(C.onward));
+  bindChoices(C.onward);
 },
 
 vendorWin(){
@@ -706,36 +686,27 @@ confectioner(){
   render("The Confectioner", [
     "The last room is the workshop, and the workshop was never empty. He has been here the whole time, stirring a copper pot of something dark: a tall figure in an apron of pressed foil, with a face like a mould that nothing was ever poured into.",
     "<em>\"Every bouquet needs wrapping,\"</em> he says, not unkindly, lifting a ladle of boiling chocolate. <em>\"Hold still.\"</em>",
-    "Then he pauses, because tradition is tradition, and offers you the courtesy of the house — one riddle:",
+    "Then he pauses, because tradition is tradition, and offers you the courtesy of the house — one question:",
     "<em>\"Two sisters sleep in silver foil. One snaps like winter branches. One bleeds black and bitter. Married, they make the only blade I fear. Name the sisters.\"</em>",
-  ], `<div class="riddle-box"><input id="ans" autocomplete="off" placeholder="name the sisters" aria-label="riddle answer"><button class="act" id="say">Answer</button></div>
-      <div class="tray-actions"><button class="act ghost" id="refuse">Refuse the riddle</button></div>`);
-  const input = stage.querySelector("#ans");
-  const finish = (knows)=>{
-    S.flags.hint = knows;
-    go("confectionerFight");
-  };
-  const say = ()=>{
-    const a = input.value.trim().toLowerCase();
-    const right = /kat|wafer|snap/.test(a) && /dark|bourn|bitter/.test(a);
-    if(right){
-      render("The Confectioner", [
-        "The mould-face goes very still.",
-        "<em>\"Yes,\"</em> he says softly. <em>\"The snap and the bitter. Married on the tongue. I had hoped you didn't know.\"</em>",
-        "He raises the ladle anyway. Tradition is tradition.",
-      ], choices([{label:"Face him.", act:()=>finish(true)}]));
-      bindChoices([{act:()=>finish(true)}]);
-    } else {
-      render("The Confectioner", [
-        `<span class="danger">"No,"</span> he says, almost sorry, and does not tell you the answer, because the answer is the only thing keeping him alive.`,
-      ], choices([{label:"Face him anyway.", act:()=>finish(false)}]));
-      bindChoices([{act:()=>finish(false)}]);
-    }
-  };
-  stage.querySelector("#say").addEventListener("click", say);
-  input.addEventListener("keydown", e=>{ if(e.key==="Enter") say(); });
-  stage.querySelector("#refuse").addEventListener("click", ()=>finish(false));
-  input.focus();
+  ], choices(C.sisters));
+  bindChoices(C.sisters);
+},
+
+confAnswer(knows){
+  S.flags.hint = knows;
+  if(knows){
+    render("The Confectioner", [
+      "The mould-face goes very still.",
+      "<em>\"Yes,\"</em> he says softly. <em>\"The snap and the bitter. Married on the tongue. I had hoped you didn't know.\"</em>",
+      "He raises the ladle anyway. Tradition is tradition.",
+    ], choices(C.faceHim));
+    bindChoices(C.faceHim);
+  } else {
+    render("The Confectioner", [
+      `<span class="danger">"No,"</span> he says, almost sorry, and does not tell you the answer, because the answer is the only thing keeping him alive.`,
+    ], choices(C.faceHim));
+    bindChoices(C.faceHim);
+  }
 },
 
 confectionerFight(){
@@ -831,6 +802,20 @@ const C = {
   ],
   onward:[
     { label:"Walk deeper into the shop.", act:()=>go("wraith") },
+  ],
+  vendorRiddle:[
+    { label:"\"A rose.\"", sub:"Given when words fail.", act:()=>go("vendorWin") },
+    { label:"\"A coin.\"", sub:"It outlives every hand it passes through.", act:()=>go("vendorFail") },
+    { label:"\"A grave.\"", sub:"This place does feel like one.", act:()=>go("vendorFail") },
+  ],
+  sisters:[
+    { label:"\"The wafer that snaps, and the bar that bleeds bitter.\"", sub:"The KitKat and the Bournville.", act:()=>SCENES.confAnswer(true) },
+    { label:"\"The milk, and the toffee.\"", sub:"The soft one and the stubborn one.", act:()=>SCENES.confAnswer(false) },
+    { label:"\"The roses, and the eclair.\"", sub:"The beautiful one and the secretive one.", act:()=>SCENES.confAnswer(false) },
+    { label:"Refuse the question.", sub:"You owe this house nothing.", act:()=>SCENES.confAnswer(false) },
+  ],
+  faceHim:[
+    { label:"Face him.", act:()=>go("confectionerFight") },
   ],
   onwardMaw:[
     { label:"Go down the last stairs.", act:()=>go("maw") },
