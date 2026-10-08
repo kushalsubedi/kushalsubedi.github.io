@@ -216,6 +216,11 @@
   .tally .grade{color:var(--cream-dim);font-style:italic}
   .tally .best{font-size:.8rem;color:var(--cream-dim);margin-top:.4rem}
 
+  /* the walker */
+  #floorwrap{width:100%;max-width:40rem;padding:0 1.2rem}
+  #floor{display:block;width:100%;height:150px}
+  .choice.near{background:rgba(212,160,82,.1);border-color:var(--foil)}
+
   footer{
     width:100%;max-width:40rem;
     padding:0 1.2rem 1.6rem;
@@ -236,6 +241,7 @@
   <div class="mark">The Midnight Confectionery</div>
   <div class="worth" id="worth"></div>
 </header>
+<div id="floorwrap"><canvas id="floor" aria-hidden="true"></canvas></div>
 <main id="stage" aria-live="polite"></main>
 <footer>
   <span>a small dark game</span>
@@ -248,16 +254,16 @@
 /* ---------- data ---------- */
 
 const ITEMS = {
-  kitkat:    { name:"KitKat",       pts:20, wrap:"var(--kitkat)",    desc:"Four fingers of wafer. Something in it wants to snap." },
-  dairymilk: { name:"Dairy Milk",   pts:15, wrap:"var(--dairymilk)", desc:"A glass and a half of someone's childhood." },
-  roses:     { name:"Cadbury Roses",pts:25, wrap:"var(--roses)",     desc:"The ones you give when words fail." },
-  dark:      { name:"Bournville 85%",pts:30,wrap:"var(--dark)",      desc:"Bitter enough to be honest." },
-  toffee:    { name:"Old Toffee",   pts:10, wrap:"var(--toffee)",    desc:"It remembers being molten. It wants to hold on." },
-  eclair:    { name:"Cadbury Eclair",pts:12,wrap:"var(--eclair)",    desc:"A hard shell around a secret caramel heart." },
+  kitkat:    { name:"KitKat",       pts:20, wrap:"var(--kitkat)",    desc:"Four wafer fingers. They want to snap." },
+  dairymilk: { name:"Dairy Milk",   pts:15, wrap:"var(--dairymilk)", desc:"Sweet milk chocolate. Tastes like being a kid." },
+  roses:     { name:"Cadbury Roses",pts:25, wrap:"var(--roses)",     desc:"The box you give when you can't find words." },
+  dark:      { name:"Bournville 85%",pts:30,wrap:"var(--dark)",      desc:"Very dark. Very honest." },
+  toffee:    { name:"Old Toffee",   pts:10, wrap:"var(--toffee)",    desc:"Old and sticky. It never lets go." },
+  eclair:    { name:"Cadbury Eclair",pts:12,wrap:"var(--eclair)",    desc:"Hard outside, caramel inside." },
   /* craftables */
-  caramelheart:{ name:"Caramel Heart",pts:30, wrap:"var(--toffee)",  desc:"Molten and loyal. It sticks to everything it loves.", crafted:true },
-  bitterlance: { name:"Bitter Lance", pts:55, wrap:"var(--dark)",    desc:"Wafer spine, black blood. The only blade down here.", crafted:true },
-  velvetrose:  { name:"Velvet Rose",  pts:50, wrap:"var(--roses)",   desc:"Milk-soft petals. Too beautiful to eat.", crafted:true },
+  caramelheart:{ name:"Caramel Heart",pts:30, wrap:"var(--toffee)",  desc:"Warm and sticky. It holds on to what it loves.", crafted:true },
+  bitterlance: { name:"Bitter Lance", pts:55, wrap:"var(--dark)",    desc:"A sharp blade of wafer and dark chocolate.", crafted:true },
+  velvetrose:  { name:"Velvet Rose",  pts:50, wrap:"var(--roses)",   desc:"A soft chocolate rose. Too pretty to eat.", crafted:true },
 };
 
 const MIXES = {
@@ -290,7 +296,7 @@ const esc = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;");
 
 function updateWorth(){
   worthEl.innerHTML = S.inv.length
-    ? `bouquet so far — <b>${score()} pts</b>, ${S.inv.length} sweet${S.inv.length>1?"s":""}`
+    ? `your bouquet — <b>${score()} pts</b> · ${S.inv.length} sweet${S.inv.length>1?"s":""}`
     : `your hands are empty`;
 }
 
@@ -300,6 +306,7 @@ function render(title, textArr, extraHTML=""){
   updateWorth();
   stage.innerHTML = `<div class="scene fade"><h1>${title}</h1>${paras(textArr)}${extraHTML}</div>`;
   window.scrollTo({top:0});
+  walkerScene();
 }
 
 function choices(list){
@@ -351,9 +358,11 @@ function picker(pool, n, verb, cont, skipLabel){
 
 function fight(cfg){
   render(cfg.title, cfg.text,
-    `<p class="whisper">Offer it one thing — or select two and mix them.</p>
+    `<p class="whisper">Give it one thing — or pick two to mix. Walk to a sweet, press E, then ring the Offer bell.</p>
      <div class="tray">${S.inv.map(id=>chipHTML(id,true)).join("")}</div>
      <div class="tray-actions"><button class="act" id="offer" disabled>Offer</button></div>`);
+  W2.monster = cfg.monster || null;
+  layoutMarkers();
 
   const sel = new Set();
   const offer = stage.querySelector("#offer");
@@ -393,7 +402,7 @@ function fight(cfg){
 }
 
 function fightInterlude(cfg, text){
-  render(cfg.title, text, choices([{label:"Steady your hands and choose again.", act:()=>fight(cfg)}]));
+  render(cfg.title, text, choices([{label:"Take a breath and choose again.", act:()=>fight(cfg)}]));
   bindChoices([{act:()=>fight(cfg)}]);
 }
 
@@ -409,7 +418,7 @@ function resolve(cfg, itemId){
 /* ---------- endings ---------- */
 
 function bouquetHTML(caption){
-  if(S.inv.length===0) return `<p class="empty-bouquet">There is no bouquet. Only the wrapper of the night, folded around nothing.</p>`;
+  if(S.inv.length===0) return `<p class="empty-bouquet">There is no bouquet. Your hands were empty.</p>`;
   const n = S.inv.length;
   const stems = S.inv.map((id,i)=>{
     const it = ITEMS[id];
@@ -421,11 +430,11 @@ function bouquetHTML(caption){
 }
 
 function grade(p){
-  if(p>=120) return "A bouquet worth dying for. You nearly did.";
-  if(p>=80)  return "A magnificent bouquet.";
-  if(p>=45)  return "A modest, honest bouquet.";
-  if(p>0)    return "A small bouquet. Small things are still things.";
-  return "Nothing but the walk itself.";
+  if(p>=120) return "A bouquet worth dying for. You almost did.";
+  if(p>=80)  return "A beautiful bouquet.";
+  if(p>=45)  return "A small, honest bouquet.";
+  if(p>0)    return "A little bouquet. Little things still count.";
+  return "Nothing but the walk.";
 }
 
 function tallyHTML(label){
@@ -447,8 +456,8 @@ function die(where, text){
   const t = Array.isArray(text)?text:[text];
   render("You are gone.", [
     ...t,
-    "The Confectionery folds itself around the place where you were standing, and is quiet.",
-    "~But something else remains. In the morning — there is always, eventually, a morning — someone walking the path finds what you were carrying, laid out as if arranged on purpose:"
+    "The shop folds itself around the spot where you stood, and goes quiet.",
+    "~But in the morning, someone finds what you were carrying, laid out like a gift:"
   ], bouquetHTML("left behind") + tallyHTML("Walk again"));
   stage.querySelector("#again").addEventListener("click", ()=>{
     document.body.classList.remove("gone");
@@ -459,19 +468,19 @@ function die(where, text){
 function ending(kind){
   if(kind==="lance"){
     render("The Last Counter", [
-      "Behind where he stood there is no door. There is a small garden under a sugar-paper moon, and in the garden, a small white stone.",
-      "You kneel to lay the bouquet down, and read the name on the stone.",
-      "<em>It is yours.</em>",
-      "~The Midnight Confectionery is where the gone ones come to build their own goodbyes. You did yours beautifully.",
+      "Behind where he stood there is no door. There is a small garden under a paper moon, and in the garden, a small white stone.",
+      "You kneel to put the bouquet down, and read the name on the stone.",
+      "<em>It is your name.</em>",
+      "~This shop is where the gone ones come to build their own goodbyes. Yours was beautiful.",
     ], bouquetHTML("laid on the stone") + tallyHTML("Walk again"));
   } else if(kind==="child"){
     S.grace += 25;
     render("The Hollow Child", [
-      "You stand still, empty-handed of weapons, and the Confectioner raises the ladle — and stops.",
-      "The Hollow Child is standing between you. It holds up the chocolate you gave it, unwrapped, unbitten. Kept.",
-      "<em>\"This one shares,\"</em> the child says, and the Confectioner lowers his arm the way shops lower their shutters, and the whole house sighs and lets you through.",
-      "The garden. The sugar-paper moon. The small white stone with your name on it. You lay the bouquet down anyway — some goodbyes you give yourself.",
-      "~Kindness, it turns out, is the rarest ingredient. +25 pts of grace.",
+      "You stand still with empty hands. The Confectioner lifts the ladle — and stops.",
+      "The Hollow Child is standing between you. It holds up the chocolate you gave it. Not eaten. Kept.",
+      "<em>\"This one shares,\"</em> the child says. The Confectioner lowers his arm, and the whole house sighs and lets you through.",
+      "The garden. The paper moon. The white stone with your name on it. You put the bouquet down anyway.",
+      "~Kindness is the rarest ingredient. +25 pts.",
     ], bouquetHTML("laid on the stone") + tallyHTML("Walk again"));
   }
   stage.querySelector("#again").addEventListener("click", reset);
@@ -483,20 +492,20 @@ const SCENES = {
 
 intro(){
   render("The Midnight Confectionery", [
-    "You wake standing up, which is never a good sign, in a shop that is closed, which is worse.",
-    "Shelves rise into the dark like church balconies. Every one of them holds chocolate — foil throwing back a light that has no source.",
-    "On the counter, a card in careful handwriting: <em>\"Build a bouquet for the one who waits at the end. Choose sweetly. Not everything here is food. Some of it is ammunition.\"</em>",
-    "~Somewhere deeper in the shop, something licks its lips.",
+    "You wake up standing in a dark chocolate shop. The shop is closed. You don't know how you got here.",
+    "Tall shelves full of chocolate shine in the dark.",
+    "On the counter there is a card: <em>\"Build a bouquet for the one who waits at the end. Pick with care. Some of this is food. Some of it is a weapon.\"</em>",
+    "~Deep in the shop, something licks its lips.",
   ], choices(C.intro));
   bindChoices(C.intro);
 },
 
 doors(){
   render("Two Doors", [
-    "Past the counter, the shop splits. Two doors, both ajar.",
-    "The left one breathes <em>warm air</em> — milk, caramel, a smell like being eight years old and forgiven for something.",
-    "The right one weeps <em>cold air</em> — rain on tin, dark cocoa, the smell of a conversation you've been avoiding.",
-    "~The door you pick says something about you. The Confectionery is listening.",
+    "Past the counter the shop splits into two doors. Both are open a little.",
+    "The left door is <em>warm</em>. It smells like milk and caramel.",
+    "The right door is <em>cold</em>. It smells like dark chocolate and rain.",
+    "~The door you pick says something about you. The shop is listening.",
   ], choices(C.doors));
   bindChoices(C.doors);
 },
@@ -505,9 +514,9 @@ hall(){
   const pool = HALL_POOL.filter(id=>!S.taken.has(id));
   const p = picker(pool, 2, "Take", picked=>{ picked.forEach(gain); go("vendor"); });
   render("The Foil Hall", [
-    "Warm light, gold on every surface. The shelves here hold the comfortable ones — the chocolates of birthdays and apologies.",
-    "A brass plaque: <em>\"TWO. The hall counts.\"</em>",
-    "~You may carry two. What you leave behind, you leave behind.",
+    "Warm golden light. These shelves hold the happy chocolates — the kind you get on birthdays.",
+    "A brass sign says: <em>\"TAKE TWO ONLY. The hall is counting.\"</em>",
+    "~Walk to a chocolate and press E to pick it up. Then ring the bell. (Clicking works too.)",
   ], p.html);
   p.bind();
 },
@@ -516,26 +525,26 @@ cellar(){
   const pool = CELLAR_POOL.filter(id=>!S.taken.has(id));
   const p = picker(pool, 2, "Take", picked=>{ picked.forEach(gain); go("vendor"); });
   render("The Cellar", [
-    "Cold steps down into shelf after shelf of the serious ones — the bitter bars, the hard sweets, the chocolates adults eat alone.",
-    "Chalk on the wall: <em>\"TWO. The cellar counts.\"</em>",
-    "~You may carry two. What you leave behind, you leave behind.",
+    "Cold steps go down. These shelves hold the serious chocolates — dark, bitter, and hard.",
+    "Chalk on the wall says: <em>\"TAKE TWO ONLY. The cellar is counting.\"</em>",
+    "~Walk to a chocolate and press E to pick it up. Then ring the bell.",
   ], p.html);
   p.bind();
 },
 
 vendor(){
   render("The Counter of Small Mercies", [
-    "A hatch in the wall slides open. Behind it, a vendor whose face is a crumpled wrapper smoothes itself into something like a smile.",
-    "<em>\"One sweet from the other room, traveller. Free of charge — if you can answer freely.\"</em>",
-    "The wrapper-face leans close: <em>\"I am given when the tongue goes coward, and I outlive the giver. What am I?\"</em>",
+    "A small window opens in the wall. Behind it is a face made of old crumpled wrappers. It smiles at you.",
+    "<em>\"Answer my riddle and you can take one sweet from the other room. For free.\"</em>",
+    "The face leans close: <em>\"People give me when they cannot find words. I live longer than the one who gives me. What am I?\"</em>",
   ], choices(C.vendorRiddle));
   bindChoices(C.vendorRiddle);
 },
 
 vendorFail(){
   render("The Counter of Small Mercies", [
-    `<span class="danger">"No,"</span> says the wrapper-face, folding itself back into a crumple. <em>"A rose, traveller. It was a rose. It is always a rose."</em>`,
-    "The hatch slides shut. The mercy was small, and now it is gone.",
+    `<span class="danger">"Wrong,"</span> says the wrapper face. <em>"It was a rose. It is always a rose."</em>`,
+    "The window slams shut. Your chance is gone.",
   ], choices(C.onward));
   bindChoices(C.onward);
 },
@@ -544,9 +553,9 @@ vendorWin(){
   const other = (S.flags.door==="hall" ? CELLAR_POOL : HALL_POOL).filter(id=>!S.taken.has(id));
   const p = picker(other, 1, "Take", picked=>{ picked.forEach(gain); go("wraith"); }, "Take nothing");
   render("The Counter of Small Mercies", [
-    "<em>\"A rose,\"</em> the vendor sighs, delighted. <em>\"It is always a rose.\"</em>",
-    "The hatch opens wider. Inside: the shelves of the room you didn't choose.",
-    "~One. The hatch counts.",
+    "<em>\"A rose,\"</em> the face sighs, happy. <em>\"It is always a rose.\"</em>",
+    "The window opens wide. Inside are the shelves of the room you did not pick.",
+    "~Take one. Only one.",
   ], p.html);
   p.bind();
 },
@@ -554,40 +563,41 @@ vendorWin(){
 wraith(){
   fight({
     title:"The Sugar Wraith",
+    monster:"wraith",
     text:[
-      "The corridor narrows and goes white — not clean white, <em>icing</em> white. The air tastes of a hundred birthdays at once.",
-      "It unfolds from the ceiling: a long translucent thing made of spun sugar and want. Where a face should be there is only a mouth, and the mouth says, politely, <span class='danger'>\"sweet?\"</span>",
-      "~It feeds on sweetness. Think about what that means before you reach into your pocket.",
+      "The hall turns white — not clean white, <em>icing</em> white. The air smells like a hundred birthdays at once.",
+      "A monster made of spun sugar drops from the ceiling. It has no face. Only a mouth. The mouth says, politely, <span class='danger'>\"sweet?\"</span>",
+      "~It eats sweet things. Think about that before you feed it.",
     ],
-    sludgeTaunt:`"sweet?" the Wraith asks again, less politely.`,
+    sludgeTaunt:`"sweet?" the Wraith asks again. It sounds angry now.`,
     sludgeDeath:"The Wraith does not ask a third time.",
     outcomes:{
       dark:{ type:"kill", consume:false,
         text:[
-          "You hold out the Bournville. The Wraith wraps itself around the bar and drinks — and shudders. Bitterness runs through it like ink through water.",
-          "<em>\"oh,\"</em> it says, surprised to be honest for once, and dissolves into a fine rain of sugar that never reaches the floor.",
-          "The bar is paler now, but whole. It only sipped.",
+          "You hold out the dark chocolate. The Wraith drinks it — and shakes. Too bitter.",
+          "<em>\"oh,\"</em> it says, and falls apart into a soft rain of sugar.",
+          "Your bar is fine. It only took a sip.",
         ],
         next:{ label:"Walk on through the falling sugar.", act:()=>go("spill") } },
       bitterlance:{ type:"kill",
         text:[
-          "You marry the snap and the bitter right there in the white corridor, and drive the Bitter Lance through the mouth mid-question.",
-          "The Wraith comes apart like candy floss in rain. The Lance goes with it — a blade that fine only works once.",
-          "~You have spent something early. The house keeps accounts.",
+          "You mix the snap and the bitter right there, and stab the Bitter Lance into the mouth.",
+          "The Wraith falls apart like candy floss in rain. The Lance breaks too — it only works once.",
+          "~You used your best weapon early. The house is counting.",
         ],
         next:{ label:"Walk on through the falling sugar.", act:()=>go("spill") } },
       roses:{ type:"escape",
         text:[
-          "You don't feed it. You <em>show</em> it — the Roses, foil petals catching the sourceless light.",
-          "The Wraith has never been given anything it wasn't about to eat. It hesitates, reaches, cradles the box like something it almost remembers.",
-          "You run. Behind you, very quietly, the mouth is not eating. It is weeping.",
+          "You don't feed it. You <em>show</em> it the Roses, shining in the dark.",
+          "No one ever gave the Wraith a gift before. It stops. It holds the box softly, like it remembers something.",
+          "You run. Behind you, the mouth is not eating. It is crying.",
           "~The Roses are gone. Some prices are strange.",
         ],
         next:{ label:"Keep running.", act:()=>go("spill") } },
     },
     fallback:{ type:"death",
       text:[
-        "You offer it sweetness. For one warm second the Wraith glows like a lit window — and then it grows a second mouth, because one is no longer enough, and the second mouth is for you.",
+        "You give it something sweet. For one second the Wraith glows, warm and happy — then it grows a second mouth, because one is not enough anymore. The second mouth is for you.",
       ] },
   });
 },
@@ -597,8 +607,8 @@ spill(){
   if(pool.length===0) return go("child");
   const p = picker(pool, 2, "Gather", picked=>{ picked.forEach(gain); go("child"); }, "Leave them");
   render("The Spill", [
-    "Someone came this way before you and did not make it. A delivery tray lies overturned, its cargo scattered across the tiles like dropped jewellery.",
-    "~Take up to two. The dead don't mind. That's the worst thing about them.",
+    "Someone walked here before you. They did not make it. Their tray of chocolates is spilled all over the floor.",
+    "~Take up to two. The dead don't mind.",
   ], p.html);
   p.bind();
 },
@@ -606,9 +616,9 @@ spill(){
 child(){
   if(S.inv.length===0) return go("maw");
   render("The Hollow Child", [
-    "At the foot of the stairs sits a child made of empty wrappers, holding its knees. Where its chest should be, there is just folded foil and a draught.",
-    "It doesn't ask. It just watches your pockets the way the hungry watch windows.",
-    "~Everything here wants to eat you. This is the only thing that's merely hungry.",
+    "A child made of empty wrappers sits at the foot of the stairs, hugging its knees. Its chest is just foil and cold air.",
+    "It does not ask for anything. It just looks at your pockets.",
+    "~Everything in this shop wants to eat you. This is the only thing that is just hungry.",
   ], choices(C.child()));
   bindChoices(C.child());
 },
@@ -619,15 +629,15 @@ childGive(){
     lose(picked[0]);
     S.flags.child = true;
     render("The Hollow Child", [
-      `You hold out the ${it.name}. The child takes it with both paper hands and does not eat it — it <em>holds</em> it, against the draught where its heart should be, and the foil of its chest stops rattling.`,
-      "<em>\"This one shares,\"</em> it whispers, to no one you can see.",
-      "~You are lighter by one sweet and heavier by something else.",
+      `You hold out the ${it.name}. The child takes it with both paper hands — and does not eat it. It <em>holds</em> it against its empty chest, and the foil stops shaking.`,
+      "<em>\"This one shares,\"</em> it whispers.",
+      "~You lost one sweet. You gained something else.",
     ], choices(C.onwardMaw));
     bindChoices(C.onwardMaw);
   });
   render("The Hollow Child", [
-    "You crouch down. The wrapper-face tilts up.",
-    "~Choose what you can bear to lose.",
+    "You bend down. The small wrapper face looks up.",
+    "~Pick what you can live without, then ring the bell.",
   ], p.html);
   p.bind();
 },
@@ -635,59 +645,60 @@ childGive(){
 maw(){
   fight({
     title:"The Maw",
+    monster:"maw",
     text:[
-      "The stairs end at a kitchen, and the kitchen is a throat. The floor slopes inward to a drain of teeth — rows of them, molar-round and patient — and the whole room swallows, slowly, once.",
-      "There is no walking around it. There is only the long sloping walk <em>across</em> it, and the teeth are starting to pay attention.",
-      "~It cannot be fought. It can only be fed, jammed, or outwitted. Sticky things hold. Milk things melt. Think.",
+      "The stairs end in a kitchen, and the kitchen is a mouth. The floor slopes down into rows of big patient teeth. The whole room swallows, slowly, once.",
+      "You cannot go around it. You can only cross it, and the teeth are watching you now.",
+      "~You cannot fight a floor. Feed it, jam it, or trick it. Sticky things hold. Milk melts. Think.",
     ],
-    sludgeTaunt:"The floor swallows again, closer this time.",
+    sludgeTaunt:"The floor swallows again. Closer this time.",
     sludgeDeath:"The floor swallows a third time, and you are standing in the middle of it.",
     outcomes:{
       caramelheart:{ type:"kill",
         text:[
-          "You throw the Caramel Heart into the drain of teeth. It lands molten-side down and does what caramel does: it <em>holds on</em>.",
-          "The Maw bites down and cannot open. It grinds, panics, seals itself shut around the one thing in the world that loves too hard to let go.",
-          "You walk across the locked teeth like a bridge.",
+          "You throw the Caramel Heart into the teeth. It lands sticky side down, and caramel does what caramel does: it <em>holds on</em>.",
+          "The Maw bites down and cannot open again.",
+          "You walk across the stuck teeth like a bridge.",
         ],
         next:{ label:"Cross the quiet teeth.", act:()=>go("confectioner") } },
       eclair:{ type:"escape",
         text:[
-          "You roll the Eclair down the slope. The Maw takes it — hard shell, secret heart — and begins to chew. And chew. And <em>chew</em>.",
-          "An Eclair is a long argument. You cross the room while the teeth are busy losing it.",
+          "You roll the Eclair down the slope. The Maw starts to chew it. And chew. And <em>chew</em>.",
+          "An Eclair takes a long time. You cross the room while the teeth are busy.",
         ],
         next:{ label:"Slip past while it chews.", act:()=>go("confectioner") } },
       toffee:{ type:"escape", wound:15,
         text:[
-          "You wedge the Old Toffee between the two biggest teeth. It holds — toffee always holds — but only on one side.",
-          "You run the gauntlet of the other side. A tooth catches your ankle on the way out, just to say it could have.",
-          "~You are through, and bleeding sweetness. −15 pts.",
+          "You jam the Old Toffee between the two biggest teeth. It holds — toffee always holds — but only on one side.",
+          "You run across the other side. A tooth cuts your leg on the way out.",
+          "~You made it, but it hurt. −15 pts.",
         ],
         next:{ label:"Limp onward.", act:()=>go("confectioner") } },
       bitterlance:{ type:"escape",
         text:[
-          "You drive the Bitter Lance down between the two biggest teeth and lean on it. The Maw strains, gags on bitterness, and holds — barely.",
-          "You cross on the flat of the blade. Behind you it snaps. A blade that fine only works once.",
+          "You jam the Bitter Lance between the two biggest teeth and push. The Maw strains and gags, but the blade holds — just barely.",
+          "You cross on the blade. Behind you, it snaps. It only works once.",
         ],
         next:{ label:"Cross the jammed teeth.", act:()=>go("confectioner") } },
       dairymilk:{ type:"death",
         text:[
-          "You offer the Dairy Milk. It melts the moment it touches the warm floor — a glass and a half poured straight down a throat.",
-          "The Maw remembers, now, how much it likes milk. And you are the only other soft thing in the room.",
+          "You throw in the Dairy Milk. It melts the second it touches the warm floor.",
+          "Now the Maw remembers how much it loves milk. And you are the only soft thing left in the room.",
         ] },
     },
     fallback:{ type:"death",
       text:[
-        "The teeth consider your offering for exactly as long as it takes to realise you are the better one.",
+        "The teeth look at your gift. Then they look at you. You are the better meal.",
       ] },
   });
 },
 
 confectioner(){
   render("The Confectioner", [
-    "The last room is the workshop, and the workshop was never empty. He has been here the whole time, stirring a copper pot of something dark: a tall figure in an apron of pressed foil, with a face like a mould that nothing was ever poured into.",
-    "<em>\"Every bouquet needs wrapping,\"</em> he says, not unkindly, lifting a ladle of boiling chocolate. <em>\"Hold still.\"</em>",
-    "Then he pauses, because tradition is tradition, and offers you the courtesy of the house — one question:",
-    "<em>\"Two sisters sleep in silver foil. One snaps like winter branches. One bleeds black and bitter. Married, they make the only blade I fear. Name the sisters.\"</em>",
+    "The last room is a workshop, and it was never empty. A tall man in a foil apron stirs a copper pot of boiling chocolate. His face is like an empty mold.",
+    "<em>\"Every bouquet needs wrapping,\"</em> he says, lifting a ladle of hot chocolate. <em>\"Hold still.\"</em>",
+    "Then he stops, because rules are rules, and asks you the house question:",
+    "<em>\"Two sisters sleep in silver foil. One snaps. One is black and bitter. Together they make the only blade I fear. Name them.\"</em>",
   ], choices(C.sisters));
   bindChoices(C.sisters);
 },
@@ -696,14 +707,14 @@ confAnswer(knows){
   S.flags.hint = knows;
   if(knows){
     render("The Confectioner", [
-      "The mould-face goes very still.",
-      "<em>\"Yes,\"</em> he says softly. <em>\"The snap and the bitter. Married on the tongue. I had hoped you didn't know.\"</em>",
-      "He raises the ladle anyway. Tradition is tradition.",
+      "The empty face goes very still.",
+      "<em>\"Yes,\"</em> he says softly. <em>\"The snap and the bitter. I hoped you did not know.\"</em>",
+      "He lifts the ladle anyway. Rules are rules.",
     ], choices(C.faceHim));
     bindChoices(C.faceHim);
   } else {
     render("The Confectioner", [
-      `<span class="danger">"No,"</span> he says, almost sorry, and does not tell you the answer, because the answer is the only thing keeping him alive.`,
+      `<span class="danger">"Wrong,"</span> he says, almost sorry. He does not tell you the answer. The answer is the only thing keeping him alive.`,
     ], choices(C.faceHim));
     bindChoices(C.faceHim);
   }
@@ -711,17 +722,17 @@ confAnswer(knows){
 
 confectionerFight(){
   const opts = [];
-  if(S.inv.length>0) opts.push({label:"Reach into the bouquet.", sub:"Offer him one sweet — or mix two.", act:()=>SCENES._confFight()});
-  if(S.flags.child) opts.push({label:"Stand still, empty-handed.", sub:"The way the card said. Choose sweetly.", act:()=>ending("child")});
+  if(S.inv.length>0) opts.push({label:"Reach into your bouquet.", sub:"Give him one sweet — or mix two.", act:()=>SCENES._confFight()});
+  if(S.flags.child) opts.push({label:"Stand still with empty hands.", sub:"The card said: pick with care.", act:()=>ending("child")});
   if(opts.length===0) return die("The Confectioner", [
-    "You have nothing left to offer and no one left to owe you kindness. The ladle tips.",
-    "Boiling chocolate is the gentlest of all the deaths in this house. That is the nicest thing anyone can say about it.",
+    "You have nothing left to give and no friend left to help you. The ladle tips.",
+    "Boiling chocolate is the kindest death in this house. That is the best anyone can say about it.",
   ]);
   render("The Confectioner", [
-    "He crosses the workshop the way closing time crosses a shop — slowly, totally, with nothing personal about it.",
+    "He walks toward you slowly and calmly, like closing time.",
     S.flags.hint
-      ? "~The snap and the bitter. Married on the tongue. You know what to build."
-      : "~He fears one blade. You were not told which. The ladle is rising.",
+      ? "~The snap and the bitter. Mix them. You know what to make."
+      : "~He fears one blade. You do not know which. The ladle is rising.",
   ], choices(opts));
   bindChoices(opts);
 },
@@ -729,24 +740,25 @@ confectionerFight(){
 _confFight(){
   fight({
     title:"The Confectioner",
+    monster:"conf",
     text:[
-      "The ladle hangs above you like a verdict. Whatever you are going to make, make it now.",
-      S.flags.hint ? "~Two sisters. One snaps. One bleeds bitter. Marry them." : "~Choose. The chocolate is boiling.",
+      "The ladle hangs over your head. Whatever you are going to make, make it now.",
+      S.flags.hint ? "~Two sisters. One snaps. One is bitter. Mix them." : "~Pick something. The chocolate is boiling.",
     ],
-    sludgeTaunt:"The Confectioner watches the sludge run through your fingers and shakes his head, a craftsman grieving bad work.",
-    sludgeDeath:"He almost looks disappointed as the ladle tips.",
+    sludgeTaunt:"He watches the mess drip through your fingers and shakes his head.",
+    sludgeDeath:"He looks almost sad as the ladle tips.",
     outcomes:{
       bitterlance:{ type:"kill", consume:false,
         text:[
-          "You marry the snap and the bitter under the raised ladle, and the Bitter Lance goes in without a sound.",
-          "The Confectioner comes apart the way a box of chocolates does when it is finally opened — lid, ribbon, a soft exhale of cocoa dust.",
+          "You mix the snap and the bitter right under the ladle, and the Bitter Lance goes in without a sound.",
+          "The Confectioner falls apart like a box of chocolates being opened — lid, ribbon, a soft puff of cocoa dust.",
         ],
         next:{ label:"Step over the ribbon.", act:()=>ending("lance") } },
     },
     fallback:{ type:"death",
       text:[
-        "He accepts your offering with real courtesy, sets it gently on the workbench — he is, after all, a professional — and then the ladle tips.",
-        "The last thing you taste is his life's work. It is, you have to admit, exceptional.",
+        "He takes your gift politely and puts it on the bench — he is, after all, a professional. Then the ladle tips.",
+        "The last thing you taste is his best work. It is, honestly, very good.",
       ] },
   });
 },
@@ -754,8 +766,8 @@ _confFight(){
 bench(){
   if(S.inv.length<2){
     render("The Abandoned Workbench", [
-      "A marble slab, a palette knife, a ring of dried chocolate like an old coffee stain. Whoever worked here left mid-thought.",
-      "~You'd need two sweets to marry two sweets. You don't have them.",
+      "A marble table with a knife and a ring of dried chocolate. Someone left in a hurry.",
+      "~You need two sweets to mix two sweets. You do not have them.",
     ], choices([C.onwardMaw[0]]));
     bindChoices([C.onwardMaw[0]]);
     return;
@@ -768,22 +780,22 @@ bench(){
       gain(result);
       const it = ITEMS[result];
       render("The Abandoned Workbench", [
-        `The two sweets take to each other at once, the way some things were always going to. On the marble before you lies a <em>${it.name}</em>.`,
+        `The two sweets melt into each other like they always wanted to. On the table lies a <em>${it.name}</em>.`,
         `~${it.desc} (${it.pts} pts)`,
       ], choices(C.benchAfter));
       bindChoices(C.benchAfter);
     } else {
       render("The Abandoned Workbench", [
-        "You warm them together on the marble. They refuse each other — politely, the way strangers do — and set back into their own shapes, unharmed.",
-        "~Not every marriage takes. Here, at least, refusal costs nothing.",
+        "You warm them together. They do not mix. They set back into their own shapes, unharmed.",
+        "~Not every mix works. Here, trying is free.",
       ], choices(C.benchAfter));
       bindChoices(C.benchAfter);
     }
   }, "Leave the bench");
   render("The Abandoned Workbench", [
-    "A marble slab, a palette knife, a ring of dried chocolate like an old coffee stain. Whoever worked here left mid-thought.",
-    "A note under the knife: <em>\"Some sweets are only half of something. — C.\"</em>",
-    "~Choose two. The marble is patient; the house is not. Mix what you like, then go.",
+    "A marble table with a knife and a ring of dried chocolate. Someone left in a hurry.",
+    "A note under the knife says: <em>\"Some sweets are only half of something. — C.\"</em>",
+    "~Pick two and press the Mix bell. Wrong mixes cost nothing here.",
   ], p.html);
   p.bind();
 },
@@ -794,43 +806,43 @@ bench(){
 
 const C = {
   intro:[
-    { label:"Pick up the card and walk toward the licking sound.", sub:"There is no bell on the door behind you. There is no door behind you.", act:()=>go("doors") },
+    { label:"Pick up the card and walk toward the sound.", sub:"There is no door behind you anymore.", act:()=>go("doors") },
   ],
   doors:[
-    { label:"The warm door.", sub:"Milk, caramel, forgiveness.", act:()=>{ S.flags.door="hall"; go("hall"); } },
-    { label:"The cold door.", sub:"Rain, dark cocoa, the avoided conversation.", act:()=>{ S.flags.door="cellar"; go("cellar"); } },
+    { label:"The warm door.", sub:"Milk and caramel.", act:()=>{ S.flags.door="hall"; go("hall"); } },
+    { label:"The cold door.", sub:"Dark chocolate and rain.", act:()=>{ S.flags.door="cellar"; go("cellar"); } },
   ],
   onward:[
     { label:"Walk deeper into the shop.", act:()=>go("wraith") },
   ],
   vendorRiddle:[
-    { label:"\"A rose.\"", sub:"Given when words fail.", act:()=>go("vendorWin") },
-    { label:"\"A coin.\"", sub:"It outlives every hand it passes through.", act:()=>go("vendorFail") },
-    { label:"\"A grave.\"", sub:"This place does feel like one.", act:()=>go("vendorFail") },
+    { label:"\"A rose.\"", sub:"You give it when words fail.", act:()=>go("vendorWin") },
+    { label:"\"A coin.\"", sub:"It passes through many hands.", act:()=>go("vendorFail") },
+    { label:"\"A grave.\"", sub:"This place feels like one.", act:()=>go("vendorFail") },
   ],
   sisters:[
-    { label:"\"The wafer that snaps, and the bar that bleeds bitter.\"", sub:"The KitKat and the Bournville.", act:()=>SCENES.confAnswer(true) },
-    { label:"\"The milk, and the toffee.\"", sub:"The soft one and the stubborn one.", act:()=>SCENES.confAnswer(false) },
-    { label:"\"The roses, and the eclair.\"", sub:"The beautiful one and the secretive one.", act:()=>SCENES.confAnswer(false) },
-    { label:"Refuse the question.", sub:"You owe this house nothing.", act:()=>SCENES.confAnswer(false) },
+    { label:"\"The wafer that snaps, and the bitter dark bar.\"", sub:"The KitKat and the Bournville.", act:()=>SCENES.confAnswer(true) },
+    { label:"\"The milk, and the toffee.\"", sub:"The soft one and the sticky one.", act:()=>SCENES.confAnswer(false) },
+    { label:"\"The roses, and the eclair.\"", sub:"The pretty one and the secret one.", act:()=>SCENES.confAnswer(false) },
+    { label:"Say nothing.", sub:"You owe this house nothing.", act:()=>SCENES.confAnswer(false) },
   ],
   faceHim:[
     { label:"Face him.", act:()=>go("confectionerFight") },
   ],
   onwardMaw:[
     { label:"Go down the last stairs.", act:()=>go("maw") },
-    { label:"Stop at the abandoned workbench.", sub:"A marble slab for marrying sweets. Mix before you descend.", act:()=>go("bench") },
+    { label:"Stop at the abandoned workbench.", sub:"A marble table for mixing sweets. Mix before you go down.", act:()=>go("bench") },
   ],
   benchAfter:[
     { label:"Mix again.", act:()=>go("bench") },
     { label:"Go down the last stairs.", act:()=>go("maw") },
   ],
   child: ()=>[
-    { label:"Give it a chocolate.", sub:"You choose which. It costs what it costs.", act:()=>go("childGive") },
-    { label:"Keep everything and walk past.", sub:"The bouquet is for the one who waits. Isn't it?", act:()=>{
+    { label:"Give it one chocolate.", sub:"You pick which one.", act:()=>go("childGive") },
+    { label:"Keep everything and walk past.", sub:"The bouquet is for the one at the end. Right?", act:()=>{
         render("The Hollow Child", [
-          "You step around it. It doesn't cry — crying needs a chest — but the wrappers rustle once, like a held breath let go.",
-          "~You keep every point you own. You notice the word <em>own</em> doing a lot of work.",
+          "You step around it. It does not cry — crying needs a chest — but the wrappers rustle once, like a small sad breath.",
+          "~You keep all your points. Somehow they feel heavier now.",
         ], choices(C.onwardMaw));
         bindChoices(C.onwardMaw);
       } },
@@ -838,6 +850,284 @@ const C = {
 };
 
 function go(id){ SCENES[id](); }
+
+/* ---------- the walker: your little self on the shop floor ----------
+   ←/→ or A/D walk, SPACE jumps, E (or W/↑) uses the thing you stand at:
+   doors = choices, chocolates = pick/unpick, bells = confirm buttons.
+   Everything mirrors the real buttons, which stay clickable. */
+
+const cv = document.getElementById("floor"), ctx = cv.getContext("2d");
+const FH = 150, FOIL = "#d4a052";
+const W2 = { x:36, dir:1, tx:null, goal:-1, near:-1, moving:false, markers:[], jy:0, vy:0, monster:null };
+let CW = 0;
+const CSSC = {};
+const cssc = v => {
+  const n = v.match(/--[\w-]+/)[0];
+  return CSSC[n] ??= getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+};
+
+function sizeCanvas(){
+  const w = cv.clientWidth, dpr = devicePixelRatio || 1;
+  if(w === CW || !w) return;
+  CW = w;
+  cv.width = w*dpr; cv.height = FH*dpr;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  layoutMarkers();
+}
+
+function layoutMarkers(){
+  const els = [...stage.querySelectorAll(".choice, .chip.selectable, .act")];
+  const span = CW - (W2.monster ? 110 : 0);
+  W2.markers = els.map((b,i)=>{
+    const kind = b.classList.contains("chip") ? "choc" : b.classList.contains("act") ? "bell" : "door";
+    let label = "";
+    if(kind==="choc"){
+      label = b.querySelector("b").textContent + " · " + b.querySelector(".pts").textContent;
+    } else if(kind==="door"){
+      const sm = b.querySelector("small");
+      label = (sm ? b.textContent.replace(sm.textContent,"") : b.textContent).trim();
+    }
+    return { x: Math.max(30, span*(i+1)/(els.length+1)), btn:b, kind, label,
+      color: kind==="choc" ? cssc(b.style.getPropertyValue("--wrap")) : null };
+  });
+}
+
+function walkerScene(){
+  sizeCanvas();
+  W2.monster = null;
+  layoutMarkers();
+  W2.x = 26; W2.dir = 1; W2.goal = -1;
+  W2.tx = Math.min(90, CW/4); // step into the room
+}
+
+const P = [];
+function burst(x,y,c){
+  for(let i=0;i<10;i++) P.push({x,y,vx:(Math.random()-.5)*3,vy:-1-Math.random()*2.5,c,l:1});
+}
+function useMarker(m){
+  burst(m.x, FH-56, m.kind==="choc" ? m.color : FOIL);
+  m.btn.click();
+}
+
+const KEYS = {};
+addEventListener("keydown", e=>{
+  const k = e.key.toLowerCase();
+  if(k==="arrowleft"||k==="arrowright"||k==="a"||k==="d"){ KEYS[k]=true; e.preventDefault(); }
+  if(k===" "){ e.preventDefault(); if(W2.jy<=0){ W2.jy = 0.01; W2.vy = 8; } }
+  if((k==="e"||k==="w"||k==="arrowup") && W2.near>-1){
+    e.preventDefault();
+    useMarker(W2.markers[W2.near]);
+  }
+});
+addEventListener("keyup", e=>{ KEYS[e.key.toLowerCase()]=false; });
+
+/* tap the floor to walk there; tap a door to walk there and enter */
+cv.addEventListener("pointerdown", e=>{
+  W2.tx = e.offsetX;
+  W2.goal = W2.markers.findIndex(m=>Math.abs(m.x-e.offsetX)<30);
+});
+
+let lastT = 0;
+function loop(t){
+  requestAnimationFrame(loop);
+  const dt = Math.min(32, t-lastT); lastT = t;
+  sizeCanvas();
+  if(!CW || !S) return;
+
+  let vx = 0;
+  if(KEYS["arrowleft"]||KEYS["a"]) vx = -1;
+  if(KEYS["arrowright"]||KEYS["d"]) vx = 1;
+  if(vx){ W2.tx = null; W2.goal = -1; }
+  else if(W2.tx != null){
+    const d = W2.tx - W2.x;
+    if(Math.abs(d) > 3) vx = Math.sign(d);
+    else {
+      W2.tx = null;
+      if(W2.goal > -1 && W2.markers[W2.goal]) useMarker(W2.markers[W2.goal]);
+      W2.goal = -1;
+    }
+  }
+  if(vx) W2.dir = vx;
+  W2.moving = !!vx;
+  W2.x = Math.max(18, Math.min(CW-18, W2.x + vx*dt*0.22));
+  if(W2.jy > 0){
+    W2.jy += W2.vy*dt/16;
+    W2.vy -= 0.6*dt/16;
+    if(W2.jy <= 0){ W2.jy = 0; W2.vy = 0; }
+  }
+
+  W2.near = W2.markers.findIndex(m=>Math.abs(m.x-W2.x)<34);
+  W2.markers.forEach((m,i)=>m.btn.classList.toggle("near", i===W2.near));
+  draw(t);
+}
+
+function door(x,y,w,h){
+  ctx.beginPath();
+  ctx.moveTo(x, y+h); ctx.lineTo(x, y+14);
+  ctx.quadraticCurveTo(x, y, x+w/2, y);
+  ctx.quadraticCurveTo(x+w, y, x+w, y+14);
+  ctx.lineTo(x+w, y+h); ctx.closePath();
+}
+
+function draw(t){
+  ctx.clearRect(0,0,CW,FH);
+  const fy = FH-26;
+
+  // floor
+  ctx.fillStyle = "rgba(212,160,82,.05)";
+  for(let x=0; x<CW; x+=32) if((x/32)%2===0) ctx.fillRect(x,fy+1,32,25);
+  ctx.strokeStyle = "rgba(212,160,82,.3)"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0,fy+.5); ctx.lineTo(CW,fy+.5); ctx.stroke();
+
+  ctx.textAlign = "center";
+  if(W2.markers.length){
+    ctx.fillStyle = "rgba(201,183,155,.4)";
+    ctx.font = "italic 11px Fraunces, serif";
+    ctx.textAlign = "left";
+    ctx.fillText("← → walk · E = take / open · space = jump", 4, 14);
+    ctx.textAlign = "center";
+  }
+
+  drawMonster(t, fy);
+
+  // doors, chocolates, bells
+  W2.markers.forEach((m,i)=>{
+    const near = i===W2.near;
+    if(m.kind==="door"){
+      ctx.globalAlpha = near ? 1 : .5 + .12*Math.sin(t/400+i*2);
+      ctx.fillStyle = "#2b1a0d"; ctx.strokeStyle = FOIL; ctx.lineWidth = 1;
+      door(m.x-16, fy-44, 32, 44);
+      ctx.fill(); ctx.stroke();
+      ctx.fillStyle = FOIL;
+      ctx.font = "italic 13px Fraunces, serif";
+      ctx.fillText(near ? "E" : i+1, m.x, fy-17);
+    } else if(m.kind==="choc"){
+      const sel = m.btn.classList.contains("selected");
+      const by = fy - 7 - (sel ? 10 + Math.sin(t/300)*2 : 0);
+      ctx.globalAlpha = near || sel ? 1 : .8;
+      if(sel){ ctx.shadowColor = FOIL; ctx.shadowBlur = 10; }
+      ctx.fillStyle = m.color || FOIL;
+      ctx.beginPath(); ctx.roundRect(m.x-9, by-6, 18, 12, 3); ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = "rgba(255,255,255,.45)"; // foil twists
+      ctx.beginPath();
+      ctx.moveTo(m.x-9, by); ctx.lineTo(m.x-14, by-5); ctx.lineTo(m.x-14, by+5); ctx.closePath();
+      ctx.moveTo(m.x+9, by); ctx.lineTo(m.x+14, by-5); ctx.lineTo(m.x+14, by+5); ctx.closePath();
+      ctx.fill();
+    } else { // bell
+      const dis = m.btn.disabled;
+      ctx.globalAlpha = dis ? .3 : near ? 1 : .75;
+      ctx.fillStyle = "#2b1a0d"; ctx.strokeStyle = FOIL; ctx.lineWidth = 1;
+      ctx.fillRect(m.x-13, fy-8, 26, 8); ctx.strokeRect(m.x-13, fy-8, 26, 8);
+      ctx.beginPath(); ctx.arc(m.x, fy-8, 10, Math.PI, 0); ctx.closePath();
+      ctx.fillStyle = near && !dis ? FOIL : "#8a6a3a"; ctx.fill();
+      ctx.fillStyle = near && !dis ? "#f0e3cf" : "rgba(201,183,155,.7)";
+      ctx.font = "italic 11.5px Fraunces, serif";
+      ctx.fillText(m.btn.textContent.trim(), m.x, fy-24);
+    }
+    ctx.globalAlpha = 1;
+    if(near && m.label){
+      ctx.fillStyle = "#f0e3cf";
+      ctx.font = "italic 12.5px Fraunces, serif";
+      const lbl = m.label.length>40 ? m.label.slice(0,38)+"…" : m.label;
+      ctx.fillText(lbl, Math.max(70, Math.min(CW-70, m.x)), fy-54);
+    }
+  });
+
+  // sparkles
+  for(let i=P.length-1; i>=0; i--){
+    const p = P[i];
+    p.x += p.vx; p.y += p.vy; p.vy += .12; p.l -= .025;
+    if(p.l<=0){ P.splice(i,1); continue; }
+    ctx.globalAlpha = p.l;
+    ctx.fillStyle = p.c;
+    ctx.fillRect(p.x-1.5, p.y-1.5, 3, 3);
+  }
+  ctx.globalAlpha = 1;
+
+  // shadow + the walker
+  ctx.fillStyle = "rgba(0,0,0,.35)";
+  ctx.beginPath(); ctx.ellipse(W2.x, fy+2, Math.max(4, 10-W2.jy*.08), 3, 0, 0, 7); ctx.fill();
+  const step = W2.moving ? Math.sin(t/80)*6 : 0;
+  const bob  = W2.moving ? Math.abs(Math.cos(t/80))*1.5 : Math.sin(t/700)*1.2;
+  ctx.save();
+  ctx.translate(W2.x, fy - W2.jy);
+  ctx.scale(W2.dir, 1);
+  ctx.lineCap = "round";
+  // legs
+  ctx.strokeStyle = "#3a2413"; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(0,-19); ctx.lineTo(step, 0); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0,-19); ctx.lineTo(-step, 0); ctx.stroke();
+  // coat
+  ctx.fillStyle = "#4a2e16";
+  ctx.strokeStyle = "rgba(212,160,82,.5)"; ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.roundRect(-8, -40+bob, 16, 23, 5);
+  ctx.fill(); ctx.stroke();
+  ctx.fillStyle = FOIL; // buttons
+  ctx.beginPath(); ctx.arc(3,-33+bob,1.2,0,7); ctx.arc(3,-27+bob,1.2,0,7); ctx.fill();
+  // back arm
+  ctx.strokeStyle = "#4a2e16"; ctx.lineWidth = 3.5;
+  ctx.beginPath(); ctx.moveTo(-4,-36+bob); ctx.lineTo(-7+step*.4, -25+bob); ctx.stroke();
+  // head
+  ctx.fillStyle = "#e8d5b5";
+  ctx.beginPath(); ctx.arc(0, -47+bob, 8, 0, 7); ctx.fill();
+  ctx.fillStyle = "#241408"; // hair
+  ctx.beginPath(); ctx.arc(0, -49+bob, 8, Math.PI*1.05, Math.PI*1.95); ctx.fill();
+  ctx.beginPath(); ctx.arc(3.2, -47.5+bob, 1.1, 0, 7); ctx.fill(); // eye
+  // scarf
+  ctx.fillStyle = FOIL;
+  ctx.fillRect(-7, -41+bob, 14, 4);
+  ctx.fillRect(-9+step*.3, -40+bob, 4, 9);
+  // front arm + bouquet
+  ctx.strokeStyle = "#4a2e16"; ctx.lineWidth = 3.5;
+  ctx.beginPath(); ctx.moveTo(4,-36+bob); ctx.lineTo(10, -27+bob); ctx.stroke();
+  const inv = S.inv.slice(0,7), hx = 10, hy = -27+bob;
+  inv.forEach((id,i)=>{
+    const a = (inv.length===1 ? 0 : -0.55 + i*1.1/(inv.length-1));
+    const tx = hx + Math.sin(a)*15, ty = hy - Math.cos(a)*15;
+    ctx.strokeStyle = "rgba(212,160,82,.7)"; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(hx,hy); ctx.lineTo(tx,ty); ctx.stroke();
+    ctx.fillStyle = cssc(ITEMS[id].wrap);
+    ctx.beginPath(); ctx.arc(tx,ty,3,0,7); ctx.fill();
+  });
+  ctx.restore();
+}
+
+function drawMonster(t, fy){
+  if(!W2.monster) return;
+  const mx = CW-55, sway = Math.sin(t/500)*4;
+  if(W2.monster==="wraith"){
+    ctx.fillStyle = "rgba(240,236,255,.12)";
+    ctx.strokeStyle = "rgba(240,236,255,.4)";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(mx-24, fy);
+    ctx.bezierCurveTo(mx-30+sway, fy-60, mx-10+sway, fy-105, mx+sway, fy-100);
+    ctx.bezierCurveTo(mx+14+sway, fy-105, mx+30+sway, fy-55, mx+22, fy);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "rgba(20,8,4,.9)";
+    ctx.beginPath(); ctx.ellipse(mx+sway, fy-72, 8, 11+Math.sin(t/300)*3, 0, 0, 7); ctx.fill();
+  } else if(W2.monster==="maw"){
+    ctx.fillStyle = "rgba(240,227,207,.85)";
+    for(let i=0;i<5;i++){
+      const tx = CW-95+i*20, h = 16 + (i%2)*7 + Math.sin(t/400+i)*2;
+      ctx.beginPath(); ctx.moveTo(tx,fy); ctx.lineTo(tx+8,fy-h); ctx.lineTo(tx+16,fy); ctx.closePath(); ctx.fill();
+    }
+  } else if(W2.monster==="conf"){
+    ctx.fillStyle = "#1a0f07"; ctx.strokeStyle = "rgba(212,160,82,.45)"; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.roundRect(mx-14, fy-95+sway*.5, 28, 95, 6); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "rgba(212,160,82,.25)";
+    ctx.beginPath(); ctx.moveTo(mx-10, fy-60); ctx.lineTo(mx+10, fy-60); ctx.lineTo(mx+7, fy-8); ctx.lineTo(mx-7, fy-8); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#cbb591";
+    ctx.beginPath(); ctx.arc(mx, fy-104+sway*.5, 9, 0, 7); ctx.fill();
+    ctx.strokeStyle = "#1a0f07"; ctx.lineWidth = 4; ctx.lineCap = "round";
+    ctx.beginPath(); ctx.moveTo(mx-12, fy-85); ctx.lineTo(mx-34, fy-100+sway); ctx.stroke();
+    ctx.fillStyle = "#5a3a1a";
+    ctx.beginPath(); ctx.arc(mx-38, fy-102+sway, 6, 0, 7); ctx.fill();
+  }
+}
+requestAnimationFrame(loop);
 
 reset();
 </script>
