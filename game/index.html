@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VAULT-20 // EXTRACTION</title>
+<meta name="description" content="A 20-room entropy roguelike. Rescue the survivor. Every run writes a different story.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⬢</text></svg>">
+<style>
+  :root{
+    --bg:#07090c;
+    --panel:#0d1118;
+    --line:#1c2635;
+    --ink:#c7d4e2;
+    --dim:#5e7187;
+    --amber:#ffb347;
+    --cyan:#4fd8eb;
+    --green:#5ee88a;
+    --red:#ff5a5a;
+    --violet:#b08cff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{font-size:16px}
+  body{
+    min-height:100vh;
+    background:var(--bg);
+    background-image:
+      repeating-linear-gradient(0deg, transparent 0 2px, rgba(255,255,255,.012) 2px 4px),
+      radial-gradient(90% 70% at 50% 0%, #0d1420 0%, var(--bg) 70%);
+    color:var(--ink);
+    font-family:ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    line-height:1.55;
+    display:flex;flex-direction:column;align-items:center;
+  }
+  body.dead{filter:saturate(.4) contrast(1.1)}
+  a{color:var(--cyan)}
+
+  #hud{
+    width:100%;max-width:46rem;
+    display:flex;flex-wrap:wrap;gap:.4rem 1.1rem;align-items:center;
+    padding:.7rem 1rem;
+    border-bottom:1px solid var(--line);
+    font-size:.78rem;color:var(--dim);
+    position:sticky;top:0;background:rgba(7,9,12,.92);backdrop-filter:blur(4px);z-index:5;
+  }
+  #hud b{color:var(--ink);font-weight:600}
+  #hud .e{color:var(--violet)}
+  #hpwrap{flex:1;min-width:7rem;height:8px;background:#141a24;border:1px solid var(--line);border-radius:4px;overflow:hidden}
+  #hpbar{height:100%;background:linear-gradient(90deg,var(--red),var(--amber) 40%,var(--green));transition:width .4s ease}
+  .fuse{color:#2a3648}
+  .fuse.on{color:var(--amber);text-shadow:0 0 8px rgba(255,179,71,.6)}
+
+  main{width:100%;max-width:46rem;padding:1.3rem 1rem 3rem;flex:1}
+  h1{font-size:clamp(1.3rem,4.5vw,1.9rem);color:var(--amber);letter-spacing:.06em;margin-bottom:.2rem;text-transform:uppercase}
+  .sub{color:var(--dim);font-size:.82rem;margin-bottom:1rem}
+  .sub .lethal{color:var(--red);font-weight:700;letter-spacing:.12em}
+  .scene p{margin-bottom:.8rem;max-width:40rem}
+  .scene .whisper{color:var(--dim);font-style:italic;font-size:.88rem}
+  .scene em{color:var(--cyan);font-style:normal}
+  .scene .danger{color:var(--red)}
+  .fade>*{animation:rise .5s ease both}
+  .fade>*:nth-child(2){animation-delay:.08s}.fade>*:nth-child(3){animation-delay:.16s}
+  .fade>*:nth-child(4){animation-delay:.24s}.fade>*:nth-child(5){animation-delay:.32s}
+  @keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){.fade>*{animation:none}}
+
+  .choices{margin-top:1.3rem;display:flex;flex-direction:column;gap:.55rem;max-width:40rem}
+  button{font:inherit;color:inherit;cursor:pointer}
+  .choice{
+    text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:.3rem;
+    padding:.7rem .95rem;transition:border-color .15s,background .15s;
+  }
+  .choice:hover,.choice:focus-visible{border-color:var(--amber);background:#121826;outline:none}
+  .choice small{display:block;color:var(--dim);font-size:.78rem}
+  .choice .glyph{color:var(--amber);margin-right:.5rem}
+
+  .box{
+    margin-top:1.1rem;background:var(--panel);border:1px solid var(--line);border-radius:.4rem;
+    padding:1rem;max-width:40rem;
+  }
+  .meta{display:flex;justify-content:space-between;gap:1rem;font-size:.78rem;color:var(--dim);margin-bottom:.7rem;flex-wrap:wrap}
+  .meta b{color:var(--amber)}
+  .act{
+    background:var(--amber);color:#1a1206;border:none;border-radius:.3rem;
+    padding:.55rem 1.2rem;font-weight:700;letter-spacing:.04em;
+  }
+  .act:disabled{opacity:.35;cursor:default}
+  .act.ghost{background:transparent;color:var(--dim);border:1px solid var(--line);font-weight:400}
+  input[type=text]{
+    font:inherit;background:#0a0e14;color:var(--ink);border:1px solid var(--line);
+    border-radius:.3rem;padding:.5rem .7rem;width:11rem;text-transform:uppercase;letter-spacing:.15em;
+  }
+  input[type=text]:focus{outline:none;border-color:var(--cyan)}
+
+  /* generic cell grids */
+  .cells{display:grid;gap:.3rem;margin:0 auto;width:max-content;max-width:100%}
+  .cell{
+    width:2.6rem;height:2.6rem;display:flex;align-items:center;justify-content:center;
+    background:#101622;border:1px solid var(--line);border-radius:.3rem;
+    font-size:1.25rem;user-select:none;transition:transform .1s,border-color .1s,background .15s;
+  }
+  button.cell:hover{border-color:var(--dim)}
+  .cell.sel{border-color:var(--amber);transform:scale(1.08);box-shadow:0 0 10px rgba(255,179,71,.3)}
+  .cell.offc{background:#0a0d12;color:#2a3648}
+  .cell.onc{background:#2e3f1d;border-color:var(--green);box-shadow:0 0 8px rgba(94,232,138,.35)}
+  .cell.pop{animation:pop .25s ease}
+  @keyframes pop{50%{transform:scale(.4);opacity:.2}}
+
+  /* simon pads */
+  .pads{display:grid;grid-template-columns:repeat(2,5.4rem);gap:.5rem;margin:.4rem auto;width:max-content}
+  .pad{height:4rem;border:1px solid var(--line);border-radius:.4rem;opacity:.45;transition:opacity .12s,box-shadow .12s}
+  .pad.lit{opacity:1;box-shadow:0 0 18px currentColor}
+
+  /* timing bar */
+  .tbar{position:relative;height:2.2rem;background:#0a0e14;border:1px solid var(--line);border-radius:.3rem;overflow:hidden;margin:.6rem 0}
+  .tzone{position:absolute;top:0;bottom:0;background:rgba(94,232,138,.22);border-left:1px solid var(--green);border-right:1px solid var(--green)}
+  .tcur{position:absolute;top:0;bottom:0;width:3px;background:var(--amber);box-shadow:0 0 8px var(--amber)}
+
+  /* wires */
+  .wires{display:flex;flex-direction:column;gap:.55rem;margin-top:.6rem}
+  .wire{height:14px;border-radius:7px;border:none;position:relative;opacity:.95}
+  .wire:hover{box-shadow:0 0 10px currentColor}
+  .wire.cut{opacity:.25;background-image:linear-gradient(90deg,transparent 47%,var(--bg) 47% 53%,transparent 53%)!important}
+
+  /* maze */
+  .maze{display:grid;gap:1px;margin:0 auto;width:max-content;background:var(--line);border:1px solid var(--line)}
+  .mz{width:1.35rem;height:1.35rem;background:#10151f}
+  .mz.w{background:#273246}
+  .mz.p{background:var(--amber);box-shadow:0 0 8px var(--amber)}
+  .mz.x{background:var(--green)}
+  .dpad{display:grid;grid-template-columns:repeat(3,3rem);gap:.3rem;width:max-content;margin:.8rem auto 0}
+  .dpad button{height:2.4rem;background:var(--panel);border:1px solid var(--line);border-radius:.3rem}
+
+  .big{font-size:1.5rem;letter-spacing:.3em;color:var(--amber);text-align:center;margin:.5rem 0}
+  .feedback{font-size:.85rem;color:var(--dim);min-height:1.4em;margin-top:.5rem}
+  .feedback.bad{color:var(--red)}
+  .feedback.good{color:var(--green)}
+
+  .reflexbox{
+    height:7rem;border-radius:.4rem;display:flex;align-items:center;justify-content:center;
+    font-size:1.2rem;letter-spacing:.2em;border:1px solid var(--line);width:100%;
+  }
+
+  /* story log */
+  .story{margin-top:1rem;border-left:2px solid var(--line);padding-left:1rem;font-size:.84rem}
+  .story div{margin-bottom:.35rem}
+  .story .t{color:var(--violet);margin-right:.5rem}
+  .sig{margin-top:1rem;color:var(--violet);font-size:.8rem;word-break:break-all}
+  .tally{text-align:center;margin-top:1.4rem}
+  .tally .num{font-size:2.3rem;color:var(--amber);font-weight:700}
+  .tally .grade{color:var(--dim);font-style:italic}
+  .tally .best{font-size:.78rem;color:var(--dim);margin-top:.3rem}
+  .center{display:flex;justify-content:center;gap:.6rem;margin-top:1.4rem;flex-wrap:wrap}
+
+  footer{width:100%;max-width:46rem;padding:0 1rem 1.2rem;font-size:.72rem;color:#3b4a5e;display:flex;justify-content:space-between;gap:1rem}
+  footer a{color:inherit}
+  @media(max-width:480px){
+    html{font-size:14.5px}
+    .cell{width:2.3rem;height:2.3rem;font-size:1.05rem}
+    .mz{width:1.1rem;height:1.1rem}
+  }
+</style>
+</head>
+<body>
+<div id="hud">
+  <span>⬢ <b>VAULT-20</b></span>
+  <span>INTEGRITY <span id="hpwrap"><span id="hpbar" style="width:100%"></span></span></span>
+  <span>FUSES <span id="fuses"><span class="fuse">▰</span><span class="fuse">▰</span><span class="fuse">▰</span></span></span>
+  <span>⟲ <b id="rw">3</b></span>
+  <span>PTS <b id="pts">0</b></span>
+  <span>T+<b id="clock">0:00</b></span>
+  <span class="e">E:<span id="ent">—</span></span>
+</div>
+<main id="stage" aria-live="polite"></main>
+<footer>
+  <span>every run is a different vault</span>
+  <a href="/">kushalsubedi.github.io</a>
+</footer>
+
+<script>
+"use strict";
+
+/* ================= entropy ================= */
+/* Every room you clear feeds the vault: room id, the time you took,
+   the points you earned. The vault's entropy decides where the doors go. */
+function mix(x){ x^=x<<13; x^=x>>>17; x^=x<<5; return x>>>0; }
+function feed(roomId, ms, pts){
+  S.E = mix(S.E ^ Math.imul(roomId+1, 2654435761) ^ (ms|0) ^ Math.imul(pts|0, 40503));
+  updateHUD();
+}
+function rng(){ // deterministic stream off current entropy
+  let r = S.E || 0x9e3779b9;
+  return ()=>{ r = mix(r + 0x6d2b79f5); return r/4294967296; };
+}
+const hex = n => ("00000000"+(n>>>0).toString(16)).slice(-8).toUpperCase();
+
+/* ================= rooms ================= */
+const LETHAL = true;
+const ROOMS = [
+ {name:"The Airlock",        eng:"timing",  p:{hits:3,miss:3,speed:1},        base:50,  dmg:12,
+  hint:"a hiss of equalizing pressure",
+  flavor:["The outer hatch seals behind you. There is no handle on this side.",
+          "A pressure valve stutters. Sync the regulator or breathe vacuum slowly."]},
+ {name:"The Spine",          eng:"sort",    p:{n:8,time:30},                  base:60,  dmg:14,
+  hint:"a long corridor of ribbed steel",
+  flavor:["A service corridor like the inside of a ribcage. Junction relays fire out of order.",
+          "Re-sequence the relays. Ascending. The lights go out if you dawdle."]},
+ {name:"The Wire Nest",      eng:"wires",   p:{n:5},                          base:70,  dmg:16,
+  hint:"the smell of burnt copper",
+  flavor:["Thousands of cables pour from the ceiling like roots. One of them feeds the lock.",
+          "Cut the right wire. The note taped to the panel is your only friend."]},
+ {name:"The Echo Chamber",   eng:"simon",   p:{len:4},                        base:70,  dmg:15,
+  hint:"your own voice, half a second late",
+  flavor:["The room repeats everything. Lights pulse in a pattern the walls remember.",
+          "Listen. Repeat it back exactly. The chamber hates being misquoted."]},
+ {name:"The Furnace",        eng:"timing",  p:{hits:5,miss:1,speed:1.6},      base:120, dmg:0, lethal:LETHAL,
+  hint:"heat bleeding through a bulkhead",
+  flavor:["The walkway crosses an open heat-exchanger. Vents blast fire on a cycle.",
+          "Time each step through the safe window. <span class='danger'>Miss twice and you are rendered.</span>"]},
+ {name:"The Crystal Hold",   eng:"match3",  p:{goal:20,moves:14},             base:90,  dmg:16,
+  hint:"light refracting through something grown",
+  flavor:["Storage bay overgrown with charged crystal. The lock feeds on resonance.",
+          "Swap adjacent crystals. Line up three or more to shatter them. Shatter enough before your moves run out."]},
+ {name:"The Archive",        eng:"riddle",  p:{},                             base:60,  dmg:14,
+  hint:"paper, somehow not burned yet",
+  flavor:["A dead librarian's terminal still asks its question to an empty room.",
+          "Answer it. It has been waiting a long time and has no patience left."]},
+ {name:"The Ledger",         eng:"mathlock",p:{hard:0},                       base:70,  dmg:15,
+  hint:"columns of numbers on frosted glass",
+  flavor:["An accounting node. The vault counts everything — including you.",
+          "The sequence is missing its last entry. Balance the books."]},
+ {name:"Cold Storage",       eng:"memory",  p:{pairs:6,flips:24},             base:80,  dmg:15,
+  hint:"frost and the hum of old freezers",
+  flavor:["Rows of specimen drawers, labels iced over. The manifest is scrambled.",
+          "Match the pairs. Every wrong flip lets more cold in."]},
+ {name:"The Chapel of Static",eng:"rest",   p:{},                             base:0,   dmg:0,
+  hint:"white noise like distant rain",
+  flavor:["A room with no task. Dead screens on every wall whisper static like rain.",
+          "For one moment, nothing here wants anything from you."]},
+ {name:"The Signal Room",    eng:"code",    p:{digits:3,guesses:6},           base:100, dmg:18,
+  hint:"a rhythmic beep, three tones",
+  flavor:["A transmitter cycles a locked frequency. Someone set a code and died with it.",
+          "Crack the code. ● right digit, right place. ○ right digit, wrong place."]},
+ {name:"The Grinder",        eng:"reflex",  p:{rounds:4,need:3},              base:120, dmg:0, lethal:LETHAL,
+  hint:"rhythmic industrial crushing",
+  flavor:["Reclamation machinery. Pistons the size of cars, moving on a broken rhythm.",
+          "Move only on the green. <span class='danger'>Flinch early or freeze late, and the vault reclaims you.</span>"]},
+ {name:"The Lexicon",        eng:"anagram", p:{tries:3,time:45},              base:70,  dmg:15,
+  hint:"letters crawling across a screen",
+  flavor:["A language lab. The door speaks one word, shredded out of order.",
+          "Reassemble it. You have three attempts before it stops listening."]},
+ {name:"Breaker Hall",       eng:"lightsout",p:{n:3,time:90},                 base:90,  dmg:16,
+  hint:"the clack of heavy switches",
+  flavor:["A wall of breakers wired by a maniac. Each switch flips its neighbours too.",
+          "Kill every light before the timer grounds the panel through you."]},
+ {name:"The Aquarium",       eng:"oddone",  p:{rounds:3,time:9},              base:60,  dmg:14,
+  hint:"green glass and slow bubbles",
+  flavor:["Observation tanks, all empty. Almost. Something in the pattern is wrong.",
+          "Find the one that doesn't belong. Three times. Quickly."]},
+ {name:"The Vent Maze",      eng:"maze",    p:{time:40},                      base:90,  dmg:16,
+  hint:"a draft from somewhere narrow",
+  flavor:["You crawl into the ducts. The map in your head is already wrong.",
+          "Reach the far grate before your air meter empties. Arrows / WASD to move."]},
+ {name:"The Garden",         eng:"match3",  p:{goal:30,moves:16},             base:110, dmg:18,
+  hint:"chlorophyll and ultraviolet",
+  flavor:["Hydroponics gone feral. Seed pods pulse in colors plants shouldn't know.",
+          "Same rules as the crystal hold — but the garden grows back faster than you can cut."]},
+ {name:"The Mirror Room",    eng:"simon",   p:{len:7},                        base:130, dmg:0, lethal:LETHAL,
+  hint:"your reflection arriving before you",
+  flavor:["Every surface reflects. Your copy in the glass moves first and waits for you to follow.",
+          "Repeat the full sequence. <span class='danger'>Your reflection only forgives nothing.</span>"]},
+ {name:"The Counting House", eng:"mathlock",p:{hard:1},                       base:90,  dmg:17,
+  hint:"an abacus clicking in the dark",
+  flavor:["The vault's actuary lives here, or lived. The last audit is unfinished.",
+          "A harder sequence this time. The vault checks your work."]},
+ {name:"THE CORE",           eng:"core",    p:{digits:4,guesses:7},           base:200, dmg:25,
+  hint:"a heartbeat that is not yours",
+  flavor:["A sphere of black glass. Inside, suspended in stasis light: <em>Dr. Mara Voss</em> — the signal you came for. Alive.",
+          "Three fuse sockets. One final lock. The vault does not want to give her back."]},
+];
+
+const RIDDLES = [
+ {q:"I am taken before you see me, kept without weight, and I outlive the one who made me. What am I?", a:"A memory", wrong:["A photograph","A shadow"]},
+ {q:"I have keys but open no doors. I have space but hold no rooms. You can enter, but never leave through me.", a:"A keyboard", wrong:["A prison","A map"]},
+ {q:"The more of me you take, the more you leave behind. What am I?", a:"Footsteps", wrong:["Time","Oxygen"]},
+ {q:"I speak without a mouth and hear without ears. I am born in air and die in silence.", a:"An echo", wrong:["A ghost","A radio"]},
+ {q:"What gets sharper the more you use it, and duller the more you protect it?", a:"A mind", wrong:["A knife","A tooth"]},
+ {q:"I am always coming but never arrive. What am I?", a:"Tomorrow", wrong:["A rescue team","The dark"]},
+ {q:"Feed me and I live. Give me a drink and I die.", a:"Fire", wrong:["A battery","Rust"]},
+ {q:"I am full of holes but still hold weight. What am I?", a:"A net", wrong:["A hull","A lung"]},
+];
+const WORDS = ["ENTROPY","SIGNAL","REACTOR","OXYGEN","RESCUE","CIPHER","STASIS","VAULT","BEACON","FUSION"];
+const ODD_PAIRS = [["●","◉"],["▲","△"],["◆","◇"],["■","▣"],["✶","✷"],["O","0"],["I","l"]];
+
+/* ================= state ================= */
+let S;
+function freshState(){
+  return {
+    hp:100, pts:0, fuses:0, rewinds:3, E:(Date.now()>>>0) ^ (Math.random()*4294967296>>>0),
+    room:-1, visited:{}, glitches:0, fuseRooms:[],
+    log:[], t0:Date.now(), dead:false, clockTimer:null, cleanup:null,
+  };
+}
+/* fuses live in real rooms, chosen by entropy — and relocate on every shuffle */
+function reseedFuses(){
+  const r = rng();
+  const pool = [];
+  for(let i=0;i<19;i++) if(i!==9) pool.push(i); // never in the Chapel (scavenge covers it)
+  S.fuseRooms = shuffle(pool, r).slice(0, 3 - S.fuses);
+}
+const elapsed = ()=> Date.now()-S.t0;
+const fmt = ms => { const s=Math.floor(ms/1000); return Math.floor(s/60)+":"+String(s%60).padStart(2,"0"); };
+function logEvent(txt){ S.log.push({t:elapsed(), txt}); }
+
+/* ================= hud / render ================= */
+const stage = document.getElementById("stage");
+function updateHUD(){
+  document.getElementById("hpbar").style.width = Math.max(0,S.hp)+"%";
+  document.getElementById("pts").textContent = S.pts;
+  document.getElementById("rw").textContent = S.rewinds;
+  document.getElementById("ent").textContent = hex(S.E);
+  document.querySelectorAll("#fuses .fuse").forEach((f,i)=>f.classList.toggle("on", i<S.fuses));
+}
+function tickClock(){ document.getElementById("clock").textContent = fmt(elapsed()); }
+
+function render(title, sub, paras, extraHTML=""){
+  if(S.cleanup){ S.cleanup(); S.cleanup=null; }
+  updateHUD();
+  stage.innerHTML = `<div class="scene fade"><h1>${title}</h1><div class="sub">${sub}</div>`
+    + paras.map(t=>`<p${t.startsWith("~")?' class="whisper"':""}>${t.replace(/^~/,"")}</p>`).join("")
+    + extraHTML + `</div>`;
+  window.scrollTo({top:0});
+}
+function choices(list){
+  return `<div class="choices">`+list.map((c,i)=>
+    `<button class="choice" data-c="${i}">${c.glyph?`<span class="glyph">${c.glyph}</span>`:""}${c.label}${c.sub?`<small>${c.sub}</small>`:""}</button>`
+  ).join("")+`</div>`;
+}
+const shuffle = (arr,r)=>{ const a=[...arr]; for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+
+/* ================= flow ================= */
+function intro(){
+  if(S && S.clockTimer) clearInterval(S.clockTimer);
+  S = freshState();
+  document.body.classList.remove("dead");
+  render("VAULT-20 // EXTRACTION", "mission briefing", [
+    "Fourteen hours ago, a distress beacon woke up inside the <em>Meridian Deep Vault</em> — a decommissioned research site that was supposed to be empty.",
+    "One biosign. <em>Dr. Mara Voss.</em> Stasis-locked in the Core, twenty rooms down.",
+    "The vault is not a building. It is a machine that rearranges itself, and it feeds on <em>entropy</em> — every choice you make, every second you burn, every point you score reshuffles the doors behind you and ahead of you.",
+    "Find <em>3 FUSES</em> and carry at least <em>100 POINTS</em> — the Core opens for nothing less. Your <em>FUSE TRACKER</em> names the rooms holding them, but every entropy shuffle relocates the fuses. For <em>50 points</em> you can <em>pause the entropy</em> and tunnel straight to one.",
+    "Keep your integrity above zero. Some rooms will only hurt you. <span class='danger'>Some rooms will kill you.</span>",
+    "If death catches you, you hold <em>3 REWINDS</em> (⟲). Each one unhappens your death, costs <span class='danger'>75 points</span>, and scatters you to a room of the vault's choosing.",
+    "~No two descents are the same vault. Whatever happens down there — that story is yours alone.",
+  ], choices([{label:"Cycle the airlock.", sub:"Begin the descent. There is no way back up.", glyph:"⬢"}]));
+  stage.querySelector("[data-c]").onclick = ()=>{
+    S.t0 = Date.now();
+    S.clockTimer = setInterval(tickClock, 1000);
+    reseedFuses();
+    logEvent("You cycled the airlock and entered VAULT-20.");
+    enterRoom(0);
+  };
+}
+
+function enterRoom(i){
+  S.room = i;
+  const R = ROOMS[i];
+  const seen = S.visited[i]||0;
+  S.visited[i] = seen+1;
+  let t0 = Date.now(); // re-stamped when the player hits ENGAGE — read time is free
+
+  if(i===19 && (S.fuses<3 || S.pts<100)){
+    S.hp -= 10;
+    const why = S.fuses<3
+      ? "The Core door tasted your "+S.fuses+" fuse"+(S.fuses===1?"":"s")+" and spat you back out."
+      : "Three fuses — but only "+S.pts+" points. The Core weighed your story and found it too cheap.";
+    logEvent(why+" (−10 integrity)");
+    if(checkDeath("The Core door drained the last of you while you stood there, unworthy.")) return;
+    render("THE CORE — SEALED", "room 20 of 20", [
+      S.fuses<3
+        ? "Three fuse sockets. You have "+S.fuses+". The black sphere does not even acknowledge you."
+        : "The three fuses seat perfectly — then eject. A readout glows: <span class='danger'>ENTROPY DEBT · "+S.pts+"/100 PTS</span>. The vault only opens for a story worth telling.",
+      "A low voltage crawls up your boots as the room loses interest. <span class='danger'>−10 integrity.</span>",
+      "~Behind the glass, something that might be a person does not move.",
+    ], "");
+    return doorScreen("The vault folds the sealed Core away behind you.");
+  }
+
+  const lethalTag = R.lethal ? ` · <span class="lethal">⚠ LETHAL ROOM</span>` : "";
+  const revisitTag = seen>1 ? ` · déjà vu ×${seen}` : "";
+  render(R.name, `room ${i+1} of 20${lethalTag}${revisitTag}`,
+    seen>1 ? ["You have been here before. The room has rearranged its furniture, as if embarrassed.", "~Half points the second time. The vault rewards novelty."] : R.flavor,
+    `<div class="box"><div class="meta"><span>CHALLENGE: <b>${R.eng.toUpperCase()}</b></span><span>WORTH: <b>~${seen>1?Math.floor(R.base/2):R.base} pts</b></span><span>SOLVE <b id="solvet">—</b></span><span>${R.lethal?'<span class="lethal">FAILURE = DEATH</span>':'FAILURE = −'+R.dmg+' INTEGRITY'}</span></div><div id="arena"></div></div>`);
+
+  const arena = stage.querySelector("#arena");
+  const start = ()=>{
+    t0 = Date.now(); arena.innerHTML="";
+    const st = stage.querySelector("#solvet");
+    const ti = setInterval(()=>{ // self-clears when the room is re-rendered
+      if(!st.isConnected) return clearInterval(ti);
+      st.textContent = fmt(Date.now()-t0);
+    }, 250);
+    ENGINES[R.eng](arena, R.p, finish);
+  };
+  if(R.eng==="rest"){ start(); }
+  else {
+    arena.innerHTML = `<div class="center" style="margin-top:.2rem"><button class="act" id="eng">ENGAGE</button></div>
+      <div class="feedback" style="text-align:center">Take your time reading. Your solve clock starts when you press ENGAGE.</div>`;
+    arena.querySelector("#eng").onclick = start;
+  }
+  function finish(ok, quality){
+    const ms = Date.now()-t0;
+    if(ok){
+      let gained = Math.floor((R.base + Math.max(0, 40 - ms/1000)*2) * (quality||1));
+      if(seen>1) gained = Math.floor(gained/2);
+      S.pts += gained;
+      feed(i, ms, gained);
+      logEvent(`${R.name}: cleared in ${fmt(ms)} (+${gained} pts).`);
+      maybeFuse(i);
+    } else {
+      feed(i, ms, 0);
+      if(R.lethal) return die(`${R.name} does not do second chances. ` + lethalDeathLine(R.eng));
+      S.hp -= R.dmg;
+      logEvent(`${R.name}: failed. The room took ${R.dmg} integrity.`);
+      if(checkDeath(`${R.name} took the last of your integrity.`)) return;
+      afterFail(R);
+    }
+  }
+}
+function lethalDeathLine(eng){
+  return {timing:"The vent cycle catches you mid-step and the vault smells like meat for an hour.",
+          reflex:"A piston the size of a car does not notice the interruption.",
+          simon:"Your reflection smiles, steps out of the glass, and finishes the descent wearing your face."}[eng]
+      || "The vault closes around the mistake.";
+}
+
+function maybeFuse(roomId){
+  const fuseHere = S.fuses<3 && S.fuseRooms.includes(roomId);
+  if(fuseHere){
+    S.fuses++;
+    logEvent(`FUSE recovered from ${ROOMS[roomId].name}. (${S.fuses}/3)`);
+  }
+  const R = ROOMS[roomId];
+  render(R.name+" — CLEAR", `room ${roomId+1} of 20`, [
+    "The lock relaxes. Somewhere deep below, the vault reshuffles itself around what you just did.",
+    fuseHere ? `<em>Your tracker screams — a FUSE is seated in a panel right here.</em> You pry it loose. ${S.fuses}/3 collected.`
+             : (S.fuses<3 ? "~No fuse signature in this room. And the shuffle you just caused has already moved them." : "~Your three fuses hum against each other like they know."),
+    S.fuses===3 ? "<em>Three fuses. Now the Core — and it only opens above 100 points.</em>" : "",
+  ].filter(Boolean), "");
+  doorScreen();
+}
+
+function afterFail(R){
+  render(R.name+" — FAILED", "the room keeps its secret", [
+    `You get it wrong, and the room makes sure you feel it. <span class="danger">−${R.dmg} integrity.</span>`,
+    "The challenge resets behind a panel you can no longer reach. The only way is through a door.",
+  ], "");
+  doorScreen("The vault shoves you onward, unimpressed.");
+}
+
+/* door generation — destinations computed from current entropy.
+   every deal reshuffles the fuses into new rooms. */
+function doorScreen(preline){
+  reseedFuses();
+  const r = rng();
+  const pool = [];
+  for(let i=0;i<19;i++) if(i!==S.room) pool.push(i);
+  // prefer unvisited
+  const unvisited = pool.filter(i=>!S.visited[i]);
+  const pickFrom = unvisited.length>=3 ? unvisited : pool;
+  const picks = shuffle(pickFrom, r).slice(0,3);
+  while(picks.length<3) picks.push(pool[Math.floor(r()*pool.length)]);
+
+  // with 3 fuses the vault sometimes dangles the Core
+  if(S.fuses===3 && r()<0.6) picks[Math.floor(r()*3)] = 19;
+
+  const doors = picks.map(dest=>{
+    const glitch = r() < 0.15 && dest!==19;
+    let actual = dest;
+    if(glitch){
+      const others = pool.filter(x=>x!==dest);
+      actual = others[Math.floor(r()*others.length)];
+      // the vault may even misroute you INTO the Core unready
+      if(r()<0.12) actual = 19;
+    }
+    return {shown:dest, actual, glitch};
+  });
+
+  const items = doors.map(d=>({
+    glyph: d.shown===19 ? "⬢" : S.fuseRooms.includes(d.shown) ? "⚡" : "▸",
+    label: d.shown===19 ? "A door marked with three sockets." : "A door breathing "+ROOMS[d.shown].hint+".",
+    sub: d.shown===19 ? "This is it. The Core."
+       : S.fuseRooms.includes(d.shown) ? "⚡ a fuse signature hums behind this one — if the door isn't lying."
+       : (S.visited[d.shown] ? "You think you've smelled this before." : null),
+  }));
+  const canPause = S.pts>=50 && S.fuses<3 && S.fuseRooms.length>0;
+  if(canPause) items.push({
+    glyph:"⏸", label:"PAUSE THE ENTROPY.",
+    sub:"−50 pts · freeze the shuffle and tunnel straight into a fuse room. A paused door cannot lie.",
+  });
+
+  const tracker = S.fuses<3
+    ? `FUSE TRACKER · signatures in: <b>${S.fuseRooms.map(i=>ROOMS[i].name).join("</b> · <b>")}</b> — they move on every shuffle.`
+    : `FUSE TRACKER · all three recovered. Find the Core.`;
+
+  const sc = stage.querySelector(".scene");
+  sc.insertAdjacentHTML("beforeend",
+    `<p class="whisper" style="margin-top:1.2rem">${preline||"Three doors. The vault dealt them from your entropy: "} <span style="color:var(--violet)">E:${hex(S.E)}</span></p>
+     <p style="font-size:.8rem;color:var(--cyan)">${tracker}</p>`
+    + choices(items));
+  stage.querySelectorAll("[data-c]").forEach((b,i)=>b.addEventListener("click",()=>{
+    if(canPause && i===doors.length){ // the pause option
+      S.pts = Math.max(0, S.pts-50);
+      const dest = S.fuseRooms[Math.floor(r()*S.fuseRooms.length)];
+      logEvent(`You paused the entropy (−50 pts) and tunneled straight into ${ROOMS[dest].name}.`);
+      render("ENTROPY PAUSED", "the vault holds its breath", [
+        "You spend 50 points of your story like a bribe. The endless rearranging <em>stops</em> — every corridor frozen mid-rotation.",
+        "In the stillness, the fuse signature is a straight line. You walk it.",
+      ], `<div class="center"><button class="act" id="ok">Step through before it unfreezes</button></div>`);
+      stage.querySelector("#ok").onclick = ()=>enterRoom(dest);
+      return;
+    }
+    const d = doors[i];
+    S.E = mix(S.E + i*0x9e3779b9); updateHUD();
+    if(d.glitch && d.actual!==d.shown){
+      S.glitches++;
+      logEvent(`A door lied to you — ${ROOMS[d.shown].name} became ${ROOMS[d.actual].name}.`);
+      render("THE VAULT SHIFTS", "misrouted", [
+        "You step through toward "+ROOMS[d.shown].hint+" — and the corridor <em>rotates</em> around you mid-stride.",
+        "<span class='danger'>This is not where the door led.</span> The vault has placed you somewhere it wanted you instead.",
+      ], `<div class="center"><button class="act" id="ok">Accept it. Keep moving.</button></div>`);
+      stage.querySelector("#ok").onclick = ()=>enterRoom(d.actual);
+    } else {
+      enterRoom(d.actual);
+    }
+  }));
+}
+
+/* ================= death & endings ================= */
+function checkDeath(line){ if(S.hp<=0){ die(line); return true; } return false; }
+
+function multiplier(){
+  const distinct = Object.keys(S.visited).length;
+  return +(1 + distinct/20 + S.glitches*0.05 + S.fuses*0.1).toFixed(2);
+}
+function storyHTML(){
+  return `<div class="story">`+S.log.map(e=>`<div><span class="t">T+${fmt(e.t)}</span>${e.txt}</div>`).join("")+`</div>`
+    + `<div class="sig">RUN SIGNATURE · E:${hex(S.E)} · ${Object.keys(S.visited).length} rooms · ${S.glitches} misroutes · ${fmt(elapsed())}</div>`;
+}
+function tallyHTML(label){
+  const m = multiplier();
+  const final = Math.floor(S.pts*m);
+  const best = +(localStorage.getItem("vault20-best")||0);
+  if(final>best) localStorage.setItem("vault20-best", final);
+  return `<div class="tally">
+    <div class="num">${final}</div>
+    <div class="grade">${S.pts} pts × ${m} entropy multiplier</div>
+    ${best>0?`<div class="best">deepest run so far: ${Math.max(best,final)}</div>`:""}
+  </div>
+  <div class="center"><button class="act" id="again">${label}</button></div>`;
+}
+function die(line){
+  if(S.rewinds>0){
+    render("FLATLINE — ALMOST", "the vault pauses, curious", [
+      line,
+      "But the vault is not done playing with you. It holds the moment of your death open like a page, and offers a trade:",
+      `<em>Burn a REWIND.</em> It scatters you to a room of the vault's choosing, patches you to 30 integrity — and eats <span class="danger">75 points</span>.`,
+      S.pts-75<100 ? "~Careful: the Core will not open for anyone carrying fewer than 100 points." : "",
+      `~${S.rewinds} rewind${S.rewinds===1?"":"s"} left.`,
+    ].filter(Boolean), choices([
+      {glyph:"⟲", label:"Burn a rewind.", sub:`−75 pts · revive at 30 integrity · random room (${S.rewinds} left)`},
+      {glyph:"☠", label:"Accept it.", sub:"Let this be the end of the story."},
+    ]));
+    const btns = stage.querySelectorAll("[data-c]");
+    btns[0].addEventListener("click", ()=>{
+      S.rewinds--; S.pts = Math.max(0, S.pts-75); S.hp = Math.max(S.hp, 30);
+      S.E = mix(S.E ^ 0xDEADBEEF);
+      const r = rng();
+      const dest = Math.floor(r()*19); // anywhere but the Core
+      logEvent(`You burned a rewind at the edge of death (−75 pts). The vault scattered you into ${ROOMS[dest].name}.`);
+      render("REWIND", "the page turns backward", [
+        "Your death unhappens. The vault flips you like a card and deals you somewhere else entirely.",
+        "<span class='danger'>−75 points.</span> Integrity patched to "+S.hp+". You can taste static for a week.",
+      ], `<div class="center"><button class="act" id="ok">Open your eyes</button></div>`);
+      stage.querySelector("#ok").onclick = ()=>enterRoom(dest);
+    });
+    btns[1].addEventListener("click", ()=>finalDeath(line));
+    return;
+  }
+  finalDeath(line);
+}
+function finalDeath(line){
+  if(S.clockTimer) clearInterval(S.clockTimer);
+  if(S.cleanup){ S.cleanup(); S.cleanup=null; }
+  S.dead = true;
+  document.body.classList.add("dead");
+  logEvent("You died. "+line);
+  render("SIGNAL LOST", "end of descent", [
+    line,
+    "The vault folds the room closed around the space where you were standing, and resumes rearranging itself for the next one.",
+    "~Somewhere below, a stasis pod keeps a heartbeat you will never reach.",
+    "<em>This was your descent:</em>",
+  ], storyHTML()+tallyHTML("Descend again"));
+  stage.querySelector("#again").onclick = intro;
+}
+function rescueEnding(){
+  if(S.clockTimer) clearInterval(S.clockTimer);
+  logEvent("You opened the Core and pulled Dr. Voss out of stasis. EXTRACTION COMPLETE.");
+  render("EXTRACTION COMPLETE", "you got her out", [
+    "The black glass irises open. Stasis fluid sheets off the pod and <em>Dr. Mara Voss</em> takes her first unassisted breath in eleven years.",
+    "She looks at you, then at the rearranged dark behind you, and says: <em>\"Which way did you come? There's no stable path down here.\"</em>",
+    "You show her the route burned into your memory. She stares. <em>\"That path has never existed before. It never will again.\"</em>",
+    "~The vault, deprived of its last secret, finally goes still and lets you both walk up and out.",
+    "<em>This was your descent — no one else will ever have this one:</em>",
+  ], storyHTML()+tallyHTML("Descend again"));
+  stage.querySelector("#again").onclick = intro;
+}
+
+/* ================= challenge engines =================
+   each: (mount, params, done(ok, qualityMult?)) */
+const ENGINES = {};
+
+/* ---- timing: hit the moving cursor inside the zone ---- */
+ENGINES.timing = (mount, p, done)=>{
+  let hits=0, misses=0, pos=0, dir=1, raf;
+  mount.innerHTML = `
+    <div class="feedback">Press <b>SPACE</b> or click the bar when the cursor is inside the green window. ${p.hits} hits needed · ${p.miss} miss${p.miss===1?"":"es"} allowed.</div>
+    <div class="tbar" id="bar"><div class="tzone" id="zone"></div><div class="tcur" id="cur"></div></div>
+    <div class="feedback" id="fb">0 / ${p.hits}</div>`;
+  const bar=mount.querySelector("#bar"), zone=mount.querySelector("#zone"), cur=mount.querySelector("#cur"), fb=mount.querySelector("#fb");
+  let zL, zW;
+  const r = rng();
+  function newZone(){ zW = 14 - p.speed*3; zL = 8+r()*(84-zW); zone.style.left=zL+"%"; zone.style.width=zW+"%"; }
+  newZone();
+  function frame(){
+    pos += dir * (0.9*p.speed);
+    if(pos>=100){pos=100;dir=-1} if(pos<=0){pos=0;dir=1}
+    cur.style.left = pos+"%";
+    raf = requestAnimationFrame(frame);
+  }
+  raf = requestAnimationFrame(frame);
+  function attempt(){
+    if(pos>=zL && pos<=zL+zW){
+      hits++; fb.textContent = `${hits} / ${p.hits}`; fb.className="feedback good";
+      if(hits>=p.hits) return finish(true);
+      newZone();
+    } else {
+      misses++; fb.textContent = `MISS (${misses}/${p.miss})`; fb.className="feedback bad";
+      if(misses>p.miss) return finish(false);
+    }
+  }
+  function key(e){ if(e.code==="Space"){ e.preventDefault(); attempt(); } }
+  bar.addEventListener("pointerdown", attempt);
+  document.addEventListener("keydown", key);
+  S.cleanup = ()=>{ cancelAnimationFrame(raf); document.removeEventListener("keydown", key); };
+  function finish(ok){ S.cleanup(); S.cleanup=null; done(ok, 1 + (p.miss-misses)*0.05); }
+};
+
+/* ---- sort: click numbers in ascending order ---- */
+ENGINES.sort = (mount, p, done)=>{
+  const r = rng();
+  const nums = shuffle(Array.from({length:p.n},(_,i)=>Math.floor(r()*90)+10+i), r);
+  const sorted = [...nums].sort((a,b)=>a-b);
+  let idx=0, errors=0;
+  mount.innerHTML = `<div class="feedback">Click the relays in <b>ascending</b> order. 3 errors allowed. <span id="tm">${p.time}</span>s.</div>
+    <div class="cells" style="grid-template-columns:repeat(4,1fr)">${nums.map(n=>`<button class="cell" data-n="${n}">${n}</button>`).join("")}</div>
+    <div class="feedback" id="fb"></div>`;
+  const fb = mount.querySelector("#fb");
+  let left = p.time;
+  const tm = setInterval(()=>{ left--; mount.querySelector("#tm").textContent=left; if(left<=0) finish(false); },1000);
+  mount.querySelectorAll(".cell").forEach(b=>b.addEventListener("click",()=>{
+    if(+b.dataset.n === sorted[idx]){ b.classList.add("onc"); b.disabled=true; idx++;
+      if(idx===sorted.length) finish(true);
+    } else { errors++; fb.textContent = `WRONG ORDER (${errors}/3)`; fb.className="feedback bad";
+      if(errors>=3) finish(false);
+    }
+  }));
+  S.cleanup = ()=>clearInterval(tm);
+  function finish(ok){ clearInterval(tm); S.cleanup=null; done(ok, 1+left*0.01); }
+};
+
+/* ---- wires: logic-clue wire cutting ---- */
+ENGINES.wires = (mount, p, done)=>{
+  const r = rng();
+  const PALETTE = [["red","#ff5a5a"],["blue","#4f8beb"],["yellow","#ffd84f"],["green","#5ee88a"],["white","#d8dee6"],["violet","#b08cff"]];
+  // build wires so exactly one color appears exactly once
+  let colors;
+  do {
+    colors = Array.from({length:p.n},()=>PALETTE[Math.floor(r()*PALETTE.length)]);
+  } while(colors.filter(c=>colors.filter(x=>x[0]===c[0]).length===1).length!==1);
+  const target = colors.findIndex(c=>colors.filter(x=>x[0]===c[0]).length===1);
+  const clues = [
+    "Cut the only wire whose color appears exactly once.",
+    "Every color that repeats is a decoy. One color stands alone. Cut it.",
+  ];
+  mount.innerHTML = `<div class="feedback">Note taped to the panel: <b>"${clues[Math.floor(r()*clues.length)]}"</b> One cut. Choose.</div>
+    <div class="wires">${colors.map((c,i)=>`<button class="wire" data-i="${i}" style="background:${c[1]};color:${c[1]}" title="${c[0]}"></button>`).join("")}</div>`;
+  mount.querySelectorAll(".wire").forEach(w=>w.addEventListener("click",()=>{
+    w.classList.add("cut");
+    setTimeout(()=>done(+w.dataset.i === target), 350);
+  }, {once:true}));
+};
+
+/* ---- simon: repeat the flash sequence ---- */
+ENGINES.simon = (mount, p, done)=>{
+  const r = rng();
+  const COLORS = ["#ff5a5a","#4fd8eb","#5ee88a","#ffd84f"];
+  const seq = Array.from({length:p.len},()=>Math.floor(r()*4));
+  let pos=0, accepting=false;
+  mount.innerHTML = `<div class="feedback" id="fb">Watch the pattern. ${p.len} pulses.</div>
+    <div class="pads">${COLORS.map((c,i)=>`<button class="pad" data-i="${i}" style="background:${c};color:${c}"></button>`).join("")}</div>`;
+  const pads = [...mount.querySelectorAll(".pad")], fb = mount.querySelector("#fb");
+  const timers = [];
+  function flash(i,dur=420){ pads[i].classList.add("lit"); timers.push(setTimeout(()=>pads[i].classList.remove("lit"), dur)); }
+  seq.forEach((s,i)=>timers.push(setTimeout(()=>{ flash(s); if(i===seq.length-1) timers.push(setTimeout(()=>{accepting=true; fb.textContent="Your turn. Repeat it.";},500)); }, 700*(i+1))));
+  pads.forEach(pd=>pd.addEventListener("click",()=>{
+    if(!accepting) return;
+    const i = +pd.dataset.i;
+    flash(i,200);
+    if(i===seq[pos]){ pos++;
+      if(pos===seq.length){ accepting=false; done(true, 1.1); }
+    } else { accepting=false; fb.textContent="The chamber repeats your mistake back at you."; fb.className="feedback bad";
+      timers.push(setTimeout(()=>done(false), 700)); }
+  }));
+  S.cleanup = ()=>timers.forEach(clearTimeout);
+};
+
+/* ---- match3: the candy-crush room ---- */
+ENGINES.match3 = (mount, p, done)=>{
+  const r = rng();
+  const GEMS = ["🔺","🔷","🟡","🟣","🟩"];
+  const N = 7;
+  let grid = [], sel = -1, moves = p.moves, cleared = 0, busy = false;
+  const gem = ()=>Math.floor(r()*GEMS.length);
+  const at = (x,y)=>grid[y*N+x];
+
+  function findMatches(){
+    const m = new Set();
+    for(let y=0;y<N;y++) for(let x=0;x<N;x++){
+      const v = at(x,y); if(v==null) continue;
+      if(x<N-2 && at(x+1,y)===v && at(x+2,y)===v){ m.add(y*N+x); m.add(y*N+x+1); m.add(y*N+x+2); }
+      if(y<N-2 && at(x,y+1)===v && at(x,y+2)===v){ m.add(y*N+x); m.add((y+1)*N+x); m.add((y+2)*N+x); }
+    }
+    return m;
+  }
+  function init(){
+    grid = Array.from({length:N*N}, gem);
+    let m; while((m=findMatches()).size) m.forEach(i=>grid[i]=gem());
+  }
+  init();
+
+  mount.innerHTML = `<div class="feedback">Shatter <b id="goal">${p.goal}</b> more · <b id="mv">${moves}</b> moves left. Click a crystal, then an adjacent one to swap.</div>
+    <div class="cells" id="g" style="grid-template-columns:repeat(${N},1fr)"></div>
+    <div class="feedback" id="fb"></div>`;
+  const gEl = mount.querySelector("#g"), fb = mount.querySelector("#fb");
+  function draw(popped){
+    gEl.innerHTML = grid.map((v,i)=>`<button class="cell ${i===sel?"sel":""} ${popped&&popped.has(i)?"pop":""}" data-i="${i}">${v==null?"":GEMS[v]}</button>`).join("");
+    mount.querySelector("#goal").textContent = Math.max(0, p.goal - cleared);
+    mount.querySelector("#mv").textContent = moves;
+    gEl.querySelectorAll(".cell").forEach(c=>c.addEventListener("click", ()=>click(+c.dataset.i)));
+  }
+  function gravity(){
+    for(let x=0;x<N;x++){
+      const col = [];
+      for(let y=N-1;y>=0;y--) if(at(x,y)!=null) col.push(at(x,y));
+      for(let y=N-1;y>=0;y--) grid[y*N+x] = col[N-1-y] ?? gem();
+    }
+  }
+  function resolve(){
+    const m = findMatches();
+    if(!m.size){ busy=false; draw();
+      if(cleared>=p.goal) return done(true, 1 + moves*0.03);
+      if(moves<=0) return done(false);
+      return;
+    }
+    cleared += m.size;
+    draw(m);
+    setTimeout(()=>{ m.forEach(i=>grid[i]=null); gravity(); draw(); setTimeout(resolve, 180); }, 240);
+  }
+  function click(i){
+    if(busy) return;
+    if(sel===-1){ sel=i; return draw(); }
+    if(sel===i){ sel=-1; return draw(); }
+    const ax=sel%N, ay=(sel/N)|0, bx=i%N, by=(i/N)|0;
+    if(Math.abs(ax-bx)+Math.abs(ay-by)!==1){ sel=i; return draw(); }
+    [grid[sel],grid[i]]=[grid[i],grid[sel]];
+    if(findMatches().size){ moves--; sel=-1; busy=true; draw(); setTimeout(resolve,150); }
+    else {
+      [grid[sel],grid[i]]=[grid[i],grid[sel]];
+      fb.textContent="No resonance. Swap must form a line of 3."; fb.className="feedback bad";
+      setTimeout(()=>{fb.textContent="";},900);
+      sel=-1; draw();
+    }
+  }
+  draw();
+};
+
+/* ---- riddle ---- */
+ENGINES.riddle = (mount, p, done)=>{
+  const r = rng();
+  const q = RIDDLES[Math.floor(r()*RIDDLES.length)];
+  const opts = shuffle([q.a, ...q.wrong], r);
+  mount.innerHTML = `<div class="feedback" style="font-size:1rem;color:var(--ink)">"${q.q}"</div>
+    <div class="choices">${opts.map((o,i)=>`<button class="choice" data-o="${o===q.a?1:0}">${o}</button>`).join("")}</div>`;
+  mount.querySelectorAll(".choice").forEach(b=>b.addEventListener("click",()=>done(b.dataset.o==="1"),{once:true}));
+};
+
+/* ---- mathlock: complete the sequence ---- */
+ENGINES.mathlock = (mount, p, done)=>{
+  const r = rng();
+  const int = (a,b)=>a+Math.floor(r()*(b-a+1));
+  let seq, kinds = [
+    ()=>{ const s=int(2,9), d=int(2,6); seq=[s]; for(let i=0;i<4;i++) seq.push(seq[i]+d+i*(p.hard?2:0)); }, // arith / accel
+    ()=>{ const s=int(2,5); seq=[s]; for(let i=0;i<4;i++) seq.push(seq[i]*2 + (p.hard?1:0)); },             // ×2(+1)
+    ()=>{ const a=int(1,4); seq=[a,a+1]; for(let i=0;i<3;i++) seq.push(seq[i]+seq[i+1]); },                 // fibonacci-ish
+  ];
+  kinds[int(0, kinds.length-1)]();
+  const answer = seq[seq.length-1], shown = seq.slice(0,-1);
+  let tries = 3;
+  mount.innerHTML = `<div class="big">${shown.join(" · ")} · ?</div>
+    <div class="center"><input type="text" id="in" inputmode="numeric" autocomplete="off" placeholder="next number"><button class="act" id="go">ENTER</button></div>
+    <div class="feedback" id="fb" style="text-align:center">${tries} attempts.</div>`;
+  const inp = mount.querySelector("#in"), fb = mount.querySelector("#fb");
+  inp.focus();
+  function submit(){
+    if(+inp.value.trim() === answer) return done(true, 1 + tries*0.05);
+    tries--; inp.value="";
+    fb.textContent = tries>0 ? `The ledger rejects it. ${tries} left.` : "The books do not balance.";
+    fb.className = "feedback bad";
+    if(tries<=0) setTimeout(()=>done(false), 600);
+  }
+  mount.querySelector("#go").onclick = submit;
+  inp.addEventListener("keydown", e=>{ if(e.key==="Enter") submit(); });
+};
+
+/* ---- memory pairs ---- */
+ENGINES.memory = (mount, p, done)=>{
+  const r = rng();
+  const ICONS = shuffle(["🧪","🧊","🫀","🦴","🌡","🧬","⚙️","📦"], r).slice(0, p.pairs);
+  const deck = shuffle([...ICONS, ...ICONS], r);
+  let open = [], found = 0, flips = p.flips, lock = false;
+  mount.innerHTML = `<div class="feedback">Match all ${p.pairs} pairs. <b id="fl">${flips}</b> flips left.</div>
+    <div class="cells" id="g" style="grid-template-columns:repeat(4,1fr)"></div>`;
+  const gEl = mount.querySelector("#g");
+  const state = deck.map(()=>0); // 0 hidden, 1 open, 2 found
+  function draw(){
+    gEl.innerHTML = deck.map((ic,i)=>`<button class="cell ${state[i]===0?"offc":state[i]===2?"onc":""}" data-i="${i}">${state[i]?ic:"▦"}</button>`).join("");
+    mount.querySelector("#fl").textContent = flips;
+    gEl.querySelectorAll(".cell").forEach(c=>c.addEventListener("click",()=>flip(+c.dataset.i)));
+  }
+  function flip(i){
+    if(lock || state[i]!==0) return;
+    state[i]=1; open.push(i); flips--;
+    draw();
+    if(open.length===2){
+      lock = true;
+      const [a,b]=open;
+      setTimeout(()=>{
+        if(deck[a]===deck[b]){ state[a]=state[b]=2; found++; }
+        else { state[a]=state[b]=0; }
+        open=[]; lock=false; draw();
+        if(found===p.pairs) return done(true, 1+flips*0.02);
+        if(flips<=0) return done(false);
+      }, 650);
+    } else if(flips<=0){ setTimeout(()=>done(false), 500); }
+  }
+  draw();
+};
+
+/* ---- rest room: no challenge, a choice ---- */
+ENGINES.rest = (mount, p, done)=>{
+  mount.innerHTML = choices([
+    {label:"Sit in the static and rest.", sub:"+20 integrity. Costs nothing but time.", glyph:"✚"},
+    {label:"Pry open the dead screens and scavenge.", sub:"The vault decides what you find.", glyph:"⚠"},
+  ]);
+  const btns = mount.querySelectorAll(".choice");
+  btns[0].addEventListener("click", ()=>{
+    S.hp = Math.min(100, S.hp+20);
+    logEvent("You rested in the Chapel of Static. (+20 integrity)");
+    done(true, 0); // 0 quality → ~time-bonus only; base is 0 anyway
+  });
+  btns[1].addEventListener("click", ()=>{
+    const r = rng();
+    const roll = r();
+    if(roll<0.35 && S.fuses<3){ S.fuses++; logEvent("Scavenged the Chapel: a FUSE, hidden behind a dead screen. ("+S.fuses+"/3)"); }
+    else if(roll<0.6){ S.pts+=60; logEvent("Scavenged the Chapel: salvage worth 60 pts."); }
+    else { S.hp-=15; logEvent("Scavenged the Chapel: a live wire. (−15 integrity)");
+      if(checkDeath("A dead screen in the Chapel was not dead.")) return; }
+    done(true, 0);
+  });
+};
+
+/* ---- code: mastermind ---- */
+ENGINES.code = (mount, p, done)=>startCode(mount, p, done, false);
+ENGINES.core = (mount, p, done)=>startCode(mount, p, done, true);
+function startCode(mount, p, done, isCore){
+  const r = rng();
+  const code = Array.from({length:p.digits},()=>1+Math.floor(r()*6));
+  let guesses = p.guesses;
+  mount.innerHTML = `<div class="feedback">${p.digits} digits, each 1–6. <b id="gl">${guesses}</b> guesses. ● = right digit right place · ○ = right digit wrong place.</div>
+    <div class="center"><input type="text" id="in" inputmode="numeric" maxlength="${p.digits}" autocomplete="off" placeholder="${"?".repeat(p.digits)}"><button class="act" id="go">TRY</button></div>
+    <div class="story" id="hist"></div>`;
+  const inp=mount.querySelector("#in"), hist=mount.querySelector("#hist");
+  inp.focus();
+  function submit(){
+    const g = inp.value.trim().split("").map(Number);
+    if(g.length!==p.digits || g.some(d=>!(d>=1&&d<=6))) { inp.value=""; return; }
+    guesses--; mount.querySelector("#gl").textContent = guesses;
+    let dot=0, circ=0;
+    const cc=[...code], gg=[...g];
+    for(let i=0;i<p.digits;i++) if(gg[i]===cc[i]){dot++; cc[i]=gg[i]=null;}
+    for(let i=0;i<p.digits;i++) if(gg[i]!=null){ const j=cc.indexOf(gg[i]); if(j>-1){circ++; cc[j]=null;} }
+    hist.insertAdjacentHTML("afterbegin", `<div><span class="t">${g.join("")}</span> ${"●".repeat(dot)}${"○".repeat(circ)}${dot+circ===0?"—":""}</div>`);
+    inp.value="";
+    if(dot===p.digits) return done(true, 1+guesses*0.06);
+    if(guesses<=0) return done(false);
+  }
+  mount.querySelector("#go").onclick=submit;
+  inp.addEventListener("keydown", e=>{ if(e.key==="Enter") submit(); });
+  // Core special: success = rescue, fail = -25 and retry (handled by wrapper)
+  if(isCore){
+    const origDone = done;
+    done = (ok)=>{
+      if(ok){ S.pts += 200; feed(19, 0, 200); return rescueEnding(); }
+      S.hp -= 25;
+      logEvent("The Core lock rejected your code and bit back. (−25 integrity)");
+      if(checkDeath("The Core's final lock drained you dry one guess at a time.")) return;
+      render("THE CORE — LOCK RESET", "it is laughing at you", [
+        "The sockets eject sparks. <span class='danger'>−25 integrity.</span> The code scrambles into a new one.",
+        "Behind the glass, the pod light flickers — she has to still be in there.",
+      ], `<div class="center"><button class="act" id="rt">Try the lock again</button></div>`);
+      stage.querySelector("#rt").onclick = ()=>{
+        const R = ROOMS[19];
+        render(R.name, "room 20 of 20 · the lock, again", R.flavor,
+          `<div class="box"><div class="meta"><span>CHALLENGE: <b>CORE</b></span><span>WORTH: <b>~200 pts</b></span><span>FAILURE = −25 INTEGRITY</span></div><div id="arena"></div></div>`);
+        startCode(stage.querySelector("#arena"), p, origDone, true);
+      };
+    };
+  }
+}
+
+/* ---- reflex: move on green ---- */
+ENGINES.reflex = (mount, p, done)=>{
+  const r = rng();
+  let round=0, good=0, timer=null, state="idle";
+  mount.innerHTML = `<div class="feedback">When the box turns <b style="color:var(--green)">GREEN</b>, click (or SPACE) within 0.6s. Early = fail. ${p.need}/${p.rounds} needed.</div>
+    <button class="reflexbox" id="bx" style="background:#1a0f0f;color:var(--red)">WAIT…</button>
+    <div class="feedback" id="fb">round 1 / ${p.rounds}</div>`;
+  const bx=mount.querySelector("#bx"), fb=mount.querySelector("#fb");
+  let greenAt=0;
+  function arm(){
+    state="wait"; bx.style.background="#1a0f0f"; bx.style.color="var(--red)"; bx.textContent="WAIT…";
+    timer = setTimeout(()=>{
+      state="go"; greenAt=performance.now();
+      bx.style.background="#12301c"; bx.style.color="var(--green)"; bx.textContent="NOW";
+      timer = setTimeout(()=>resolveRound(false, "TOO SLOW"), 600);
+    }, 900 + r()*2200);
+  }
+  function resolveRound(ok, label){
+    clearTimeout(timer);
+    if(ok) good++;
+    round++;
+    fb.textContent = `${label} — ${good} good of ${round}`;
+    fb.className = "feedback "+(ok?"good":"bad");
+    if(round>=p.rounds || good>=p.need || (round-good) > (p.rounds-p.need)){
+      state="done";
+      return setTimeout(()=>done(good>=p.need, 1.1), 600);
+    }
+    setTimeout(arm, 800);
+  }
+  function hit(){
+    if(state==="wait") return resolveRound(false, "FLINCHED EARLY");
+    if(state==="go")  return resolveRound(performance.now()-greenAt<=600, "MOVED");
+  }
+  bx.addEventListener("pointerdown", hit);
+  function key(e){ if(e.code==="Space"){e.preventDefault(); hit();} }
+  document.addEventListener("keydown", key);
+  S.cleanup = ()=>{ clearTimeout(timer); document.removeEventListener("keydown", key); };
+  arm();
+};
+
+/* ---- anagram ---- */
+ENGINES.anagram = (mount, p, done)=>{
+  const r = rng();
+  const word = WORDS[Math.floor(r()*WORDS.length)];
+  let scr = word;
+  while(scr===word) scr = shuffle(word.split(""), r).join("");
+  let tries = p.tries, left = p.time;
+  mount.innerHTML = `<div class="big">${scr.split("").join(" ")}</div>
+    <div class="center"><input type="text" id="in" autocomplete="off" placeholder="the word"><button class="act" id="go">SPEAK</button></div>
+    <div class="feedback" id="fb" style="text-align:center">${tries} attempts · <span id="tm">${left}</span>s</div>`;
+  const inp=mount.querySelector("#in"), fb=mount.querySelector("#fb");
+  inp.focus();
+  const tm = setInterval(()=>{ left--; const el=mount.querySelector("#tm"); if(el) el.textContent=left; if(left<=0) finish(false); },1000);
+  S.cleanup = ()=>clearInterval(tm);
+  function finish(ok){ clearInterval(tm); S.cleanup=null; done(ok, 1+tries*0.06+left*0.005); }
+  function submit(){
+    if(inp.value.trim().toUpperCase()===word) return finish(true);
+    tries--; inp.value="";
+    fb.innerHTML = tries>0 ? `Not the word. ${tries} left · <span id="tm">${left}</span>s` : "The door stops listening.";
+    if(tries<=0) setTimeout(()=>finish(false), 500);
+  }
+  mount.querySelector("#go").onclick=submit;
+  inp.addEventListener("keydown", e=>{ if(e.key==="Enter") submit(); });
+};
+
+/* ---- lights out ---- */
+ENGINES.lightsout = (mount, p, done)=>{
+  const r = rng();
+  const N = p.n;
+  const on = Array(N*N).fill(false);
+  function press(i, record){
+    const x=i%N, y=(i/N)|0;
+    [[0,0],[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy])=>{
+      const nx=x+dx, ny=y+dy;
+      if(nx>=0&&nx<N&&ny>=0&&ny<N) on[ny*N+nx]=!on[ny*N+nx];
+    });
+  }
+  // scramble from solved state → always solvable
+  for(let k=0;k<3+Math.floor(r()*3);k++) press(Math.floor(r()*N*N));
+  if(on.every(v=>!v)) press(Math.floor(r()*N*N));
+  let left = p.time;
+  mount.innerHTML = `<div class="feedback">Pressing a breaker flips it <b>and its neighbours</b>. Kill every light. <span id="tm">${left}</span>s.</div>
+    <div class="cells" id="g" style="grid-template-columns:repeat(${N},1fr)"></div>`;
+  const gEl = mount.querySelector("#g");
+  function draw(){
+    gEl.innerHTML = on.map((v,i)=>`<button class="cell ${v?"onc":"offc"}" data-i="${i}">${v?"▮":"▯"}</button>`).join("");
+    gEl.querySelectorAll(".cell").forEach(c=>c.addEventListener("click",()=>{
+      press(+c.dataset.i); draw();
+      if(on.every(v=>!v)) finish(true);
+    }));
+  }
+  const tm = setInterval(()=>{ left--; const el=mount.querySelector("#tm"); if(el) el.textContent=left; if(left<=0) finish(false); },1000);
+  S.cleanup = ()=>clearInterval(tm);
+  function finish(ok){ clearInterval(tm); S.cleanup=null; done(ok, 1+left*0.005); }
+  draw();
+};
+
+/* ---- odd one out ---- */
+ENGINES.oddone = (mount, p, done)=>{
+  const r = rng();
+  let round = 0;
+  function play(){
+    const [a,b] = ODD_PAIRS[Math.floor(r()*ODD_PAIRS.length)];
+    const side = 3 + round; // 3x3, 4x4, 5x5
+    const n = side*side;
+    const odd = Math.floor(r()*n);
+    let left = p.time;
+    mount.innerHTML = `<div class="feedback">Round ${round+1}/${p.rounds} — click the one that is different. <span id="tm">${left}</span>s</div>
+      <div class="cells" style="grid-template-columns:repeat(${side},1fr)">${Array.from({length:n},(_,i)=>`<button class="cell" data-ok="${i===odd?1:0}">${i===odd?b:a}</button>`).join("")}</div>`;
+    const tm = setInterval(()=>{ left--; const el=mount.querySelector("#tm"); if(el) el.textContent=left; if(left<=0){clearInterval(tm); S.cleanup=null; done(false);} },1000);
+    S.cleanup = ()=>clearInterval(tm);
+    mount.querySelectorAll(".cell").forEach(c=>c.addEventListener("click",()=>{
+      clearInterval(tm); S.cleanup=null;
+      if(c.dataset.ok!=="1") return done(false);
+      round++;
+      if(round>=p.rounds) return done(true, 1.1);
+      play();
+    }));
+  }
+  play();
+};
+
+/* ---- maze: crawl the vents ---- */
+ENGINES.maze = (mount, p, done)=>{
+  const r = rng();
+  const W = 13, H = 11; // odd
+  const wall = Array.from({length:H},()=>Array(W).fill(true));
+  function carve(x,y){
+    wall[y][x]=false;
+    shuffle([[2,0],[-2,0],[0,2],[0,-2]], r).forEach(([dx,dy])=>{
+      const nx=x+dx, ny=y+dy;
+      if(nx>0&&nx<W-1&&ny>0&&ny<H-1&&wall[ny][nx]){
+        wall[y+dy/2][x+dx/2]=false; carve(nx,ny);
+      }
+    });
+  }
+  carve(1,1);
+  let px=1, py=1;
+  const ex=W-2, ey=H-2;
+  wall[ey][ex]=false;
+  let left = p.time;
+  mount.innerHTML = `<div class="feedback">Reach the <b style="color:var(--green)">green grate</b>. Arrows / WASD. Air: <span id="tm">${left}</span>s</div>
+    <div class="maze" id="mz" style="grid-template-columns:repeat(${W},1fr)"></div>
+    <div class="dpad"><span></span><button data-d="0,-1">▲</button><span></span><button data-d="-1,0">◀</button><button data-d="0,1">▼</button><button data-d="1,0">▶</button></div>`;
+  const mzEl = mount.querySelector("#mz");
+  function draw(){
+    let html="";
+    for(let y=0;y<H;y++) for(let x=0;x<W;x++){
+      const cls = (x===px&&y===py)?"p":(x===ex&&y===ey)?"x":wall[y][x]?"w":"";
+      html+=`<div class="mz ${cls}"></div>`;
+    }
+    mzEl.innerHTML = html;
+  }
+  function move(dx,dy){
+    const nx=px+dx, ny=py+dy;
+    if(nx<0||nx>=W||ny<0||ny>=H||wall[ny][nx]) return;
+    px=nx; py=ny; draw();
+    if(px===ex&&py===ey) finish(true);
+  }
+  function key(e){
+    const map={arrowup:[0,-1],w:[0,-1],arrowdown:[0,1],s:[0,1],arrowleft:[-1,0],a:[-1,0],arrowright:[1,0],d:[1,0]};
+    const m = map[e.key.toLowerCase()];
+    if(m){ e.preventDefault(); move(...m); }
+  }
+  document.addEventListener("keydown", key);
+  mount.querySelectorAll(".dpad button").forEach(b=>b.addEventListener("click",()=>{
+    const [dx,dy]=b.dataset.d.split(",").map(Number); move(dx,dy);
+  }));
+  const tm = setInterval(()=>{ left--; const el=mount.querySelector("#tm"); if(el) el.textContent=left; if(left<=0) finish(false); },1000);
+  S.cleanup = ()=>{ clearInterval(tm); document.removeEventListener("keydown", key); };
+  function finish(ok){ S.cleanup(); S.cleanup=null; done(ok, 1+left*0.01); }
+  draw();
+};
+
+/* ================= boot ================= */
+intro();
+</script>
+</body>
+</html>
